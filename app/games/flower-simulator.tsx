@@ -260,7 +260,7 @@ export default function FlowerSimulatorScreen() {
                     </View>
                     <Pressable
                       style={[styles.useButton, { backgroundColor: colors.secondary }]}
-                      onPress={handleUseGameItemPress(item.id)}
+                      onPress={() => handleUseGameItemPress(item.id)}
                     >
                       <Text style={[styles.useButtonText, { color: '#fff' }]}>
                         {getTranslation('games.use', currentLanguage)}

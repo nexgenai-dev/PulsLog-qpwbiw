@@ -24,7 +24,7 @@ const SHOP_ITEMS = [
 
 export default function FlowerSimulatorScreen() {
   const theme = useTheme();
-  const { gameState, userProfile, waterFlower, addGameCoins, useGameItem, updateGameState } = useWidget();
+  const { gameState, userProfile, waterFlower, addGameCoins, updateGameState } = useWidget();
   const currentLanguage: Language = userProfile?.language || 'en';
   const [activeTab, setActiveTab] = useState<'home' | 'collection' | 'shop' | 'challenges'>('home');
   const [selectedFlower, setSelectedFlower] = useState<string | null>(null);
@@ -35,15 +35,38 @@ export default function FlowerSimulatorScreen() {
 
   const currentFlower = selectedFlower && gameState ? gameState.flowers.find(f => f.id === selectedFlower) : gameState?.flowers[0];
 
-  const handleUseGameItemPress = (itemId: string) => {
+  const handleUseGameItemPress = async (itemId: string) => {
     if (!currentFlower) {
       console.log('No current flower available');
       return;
     }
     try {
-      useGameItem(itemId, currentFlower.id).catch((error) => {
-        console.log('Error using game item:', error);
+      const item = gameState?.inventory.find(i => i.id === itemId);
+      if (!item) {
+        console.log('Item not found in inventory');
+        return;
+      }
+
+      const newState = { ...gameState };
+      const updatedFlowers = newState.flowers.map(f => {
+        if (f.id === currentFlower.id) {
+          return { ...f, xp: f.xp + item.xpBonus };
+        }
+        return f;
       });
+
+      const updatedInventory = newState.inventory.map(i => {
+        if (i.id === itemId) {
+          return { ...i, quantity: i.quantity - 1 };
+        }
+        return i;
+      }).filter(i => i.quantity > 0);
+
+      newState.flowers = updatedFlowers;
+      newState.inventory = updatedInventory;
+
+      await updateGameState(newState);
+      console.log('Game item used successfully');
     } catch (error) {
       console.log('Error using game item:', error);
     }

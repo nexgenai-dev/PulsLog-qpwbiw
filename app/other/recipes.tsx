@@ -18,7 +18,7 @@ export default function RecipesScreen() {
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
   const [recipeTitle, setRecipeTitle] = useState('');
   const [recipeImage, setRecipeImage] = useState<string | undefined>();
-  const [ingredients, setIngredients] = useState<Array<{ id: string; name: string; quantity: number; unit: string }>>([]);
+  const [ingredients, setIngredients] = useState<{ id: string; name: string; quantity: number; unit: string }[]>([]);
   const [instructions, setInstructions] = useState('');
   const [newIngredientName, setNewIngredientName] = useState('');
   const [newIngredientQuantity, setNewIngredientQuantity] = useState('');

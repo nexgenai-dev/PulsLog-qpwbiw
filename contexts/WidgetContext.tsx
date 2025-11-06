@@ -124,12 +124,12 @@ export interface Recipe {
   id: string;
   title: string;
   imageUri?: string;
-  ingredients: Array<{
+  ingredients: {
     id: string;
     name: string;
     quantity: number;
     unit: string;
-  }>;
+  }[];
   instructions: string;
   createdAt: string;
 }

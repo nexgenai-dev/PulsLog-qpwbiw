@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -55,12 +56,27 @@ export interface ForumMessage {
   likes: number;
 }
 
+export interface SamsungHealthData {
+  id: string;
+  date: string;
+  heartRateResting?: number;
+  heartRateLight?: number;
+  heartRateSports?: number;
+  stepCount?: number;
+  sleepDuration?: number;
+  sleepLight?: number;
+  sleepDeep?: number;
+  sleepREM?: number;
+  lastSyncTime?: string;
+}
+
 interface WidgetContextType {
   userProfile: UserProfile | null;
   healthEntries: HealthEntry[];
   drinkEntries: DrinkEntry[];
   reminders: Reminder[];
   forumMessages: ForumMessage[];
+  samsungHealthData: SamsungHealthData[];
   addHealthEntry: (entry: HealthEntry) => Promise<void>;
   updateUserProfile: (profile: UserProfile) => Promise<void>;
   getEntriesByDate: (date: string) => HealthEntry[];
@@ -68,6 +84,9 @@ interface WidgetContextType {
   getDrinkEntriesByDate: (date: string) => DrinkEntry[];
   updateReminders: (reminders: Reminder[]) => Promise<void>;
   addForumMessage: (message: ForumMessage) => Promise<void>;
+  deleteHealthEntry: (id: string) => Promise<void>;
+  updateSamsungHealthData: (data: SamsungHealthData[]) => Promise<void>;
+  getSamsungHealthDataByDate: (date: string) => SamsungHealthData | undefined;
   isLoading: boolean;
   refreshWidget: () => void;
 }
@@ -80,6 +99,7 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
   const [drinkEntries, setDrinkEntries] = useState<DrinkEntry[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [forumMessages, setForumMessages] = useState<ForumMessage[]>([]);
+  const [samsungHealthData, setSamsungHealthData] = useState<SamsungHealthData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -93,6 +113,7 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
       const drinkData = await AsyncStorage.getItem('drinkEntries');
       const remindersData = await AsyncStorage.getItem('reminders');
       const forumData = await AsyncStorage.getItem('forumMessages');
+      const samsungHealthDataStr = await AsyncStorage.getItem('samsungHealthData');
 
       if (profileData) {
         setUserProfile(JSON.parse(profileData));
@@ -112,6 +133,10 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
 
       if (forumData) {
         setForumMessages(JSON.parse(forumData));
+      }
+
+      if (samsungHealthDataStr) {
+        setSamsungHealthData(JSON.parse(samsungHealthDataStr));
       }
     } catch (error) {
       console.log('Error loading data:', error);
@@ -176,6 +201,29 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const deleteHealthEntry = async (id: string) => {
+    try {
+      const updatedEntries = healthEntries.filter(entry => entry.id !== id);
+      setHealthEntries(updatedEntries);
+      await AsyncStorage.setItem('healthEntries', JSON.stringify(updatedEntries));
+    } catch (error) {
+      console.log('Error deleting health entry:', error);
+    }
+  };
+
+  const updateSamsungHealthData = async (data: SamsungHealthData[]) => {
+    try {
+      setSamsungHealthData(data);
+      await AsyncStorage.setItem('samsungHealthData', JSON.stringify(data));
+    } catch (error) {
+      console.log('Error saving Samsung Health data:', error);
+    }
+  };
+
+  const getSamsungHealthDataByDate = (date: string) => {
+    return samsungHealthData.find(data => data.date === date);
+  };
+
   const refreshWidget = () => {
     loadData();
   };
@@ -187,6 +235,7 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
       drinkEntries,
       reminders,
       forumMessages,
+      samsungHealthData,
       addHealthEntry,
       updateUserProfile,
       getEntriesByDate,
@@ -194,6 +243,9 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
       getDrinkEntriesByDate,
       updateReminders,
       addForumMessage,
+      deleteHealthEntry,
+      updateSamsungHealthData,
+      getSamsungHealthDataByDate,
       isLoading,
       refreshWidget,
     }}>

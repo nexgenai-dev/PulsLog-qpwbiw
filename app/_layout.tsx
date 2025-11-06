@@ -1,3 +1,4 @@
+
 import "react-native-reanimated";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
@@ -111,6 +112,13 @@ export default function RootLayout() {
                 name="health-info"
                 options={{
                   title: "Health Information",
+                  presentation: "card",
+                }}
+              />
+              <Stack.Screen
+                name="samsung-health"
+                options={{
+                  title: "Samsung Health",
                   presentation: "card",
                 }}
               />

@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View, Pressable, ScrollView, Switch, Platform } from 'react-native';
+
+import { StyleSheet, Text, View, Pressable, ScrollView, Switch, Platform, Modal, TextInput } from 'react-native';
 import { router } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
 import { colors, commonStyles } from '@/styles/commonStyles';
@@ -6,6 +7,7 @@ import { useWidget } from '@/contexts/WidgetContext';
 import { useState, useEffect } from 'react';
 import { Reminder } from '@/contexts/WidgetContext';
 import { IconSymbol } from '@/components/IconSymbol';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const styles = StyleSheet.create({
   scrollContent: {
@@ -52,6 +54,15 @@ const styles = StyleSheet.create({
   deleteButton: {
     padding: 8,
   },
+  timeEditButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: colors.highlight + '20',
+  },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -85,10 +96,40 @@ export default function RemindersScreen() {
   const theme = useTheme();
   const { reminders, updateReminders } = useWidget();
   const [localReminders, setLocalReminders] = useState<Reminder[]>(reminders);
+  const [editingReminderId, setEditingReminderId] = useState<string | null>(null);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [selectedTime, setSelectedTime] = useState(new Date());
 
   useEffect(() => {
     setLocalReminders(reminders);
   }, [reminders]);
+
+  const handleTimeChange = (event: any, date?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowTimePicker(false);
+    }
+    if (date && editingReminderId) {
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const timeString = `${hours}:${minutes}`;
+      
+      const updated = localReminders.map(r =>
+        r.id === editingReminderId ? { ...r, time: timeString } : r
+      );
+      setLocalReminders(updated);
+      updateReminders(updated);
+      setEditingReminderId(null);
+    }
+  };
+
+  const openTimeEditor = (reminder: Reminder) => {
+    const [hours, minutes] = reminder.time.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes);
+    setSelectedTime(date);
+    setEditingReminderId(reminder.id);
+    setShowTimePicker(true);
+  };
 
   const handleToggleReminder = (id: string) => {
     const updated = localReminders.map(r =>
@@ -139,7 +180,13 @@ export default function RemindersScreen() {
           {pulseReminders.map(reminder => (
             <View key={reminder.id} style={styles.reminderCard}>
               <View style={styles.reminderContent}>
-                <Text style={styles.reminderTime}>{reminder.time}</Text>
+                <Pressable
+                  onPress={() => openTimeEditor(reminder)}
+                  style={styles.timeEditButton}
+                >
+                  <IconSymbol name="clock.fill" color={colors.primary} size={16} />
+                  <Text style={styles.reminderTime}>{reminder.time}</Text>
+                </Pressable>
                 <Switch
                   value={reminder.enabled}
                   onValueChange={() => handleToggleReminder(reminder.id)}
@@ -172,7 +219,13 @@ export default function RemindersScreen() {
           {medReminders.map(reminder => (
             <View key={reminder.id} style={styles.reminderCard}>
               <View style={styles.reminderContent}>
-                <Text style={styles.reminderTime}>{reminder.time}</Text>
+                <Pressable
+                  onPress={() => openTimeEditor(reminder)}
+                  style={styles.timeEditButton}
+                >
+                  <IconSymbol name="clock.fill" color={colors.secondary} size={16} />
+                  <Text style={styles.reminderTime}>{reminder.time}</Text>
+                </Pressable>
                 <Switch
                   value={reminder.enabled}
                   onValueChange={() => handleToggleReminder(reminder.id)}
@@ -204,6 +257,15 @@ export default function RemindersScreen() {
           </Text>
         </View>
       </ScrollView>
+
+      {showTimePicker && (
+        <DateTimePicker
+          value={selectedTime}
+          mode="time"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={handleTimeChange}
+        />
+      )}
     </View>
   );
 }

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ScrollView, View, Text, Pressable, StyleSheet, Platform } from 'react-native';
+import { ScrollView, View, Text, Pressable, StyleSheet, Platform, Alert } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useWidget } from '@/contexts/WidgetContext';
@@ -8,8 +8,26 @@ import { IconSymbol } from '@/components/IconSymbol';
 
 export default function CalendarScreen() {
   const theme = useTheme();
-  const { healthEntries, getEntriesByDate } = useWidget();
+  const { healthEntries, getEntriesByDate, deleteHealthEntry } = useWidget();
   const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const handleDeleteEntry = (entryId: string) => {
+    Alert.alert(
+      'Delete Entry',
+      'Are you sure you want to delete this entry?',
+      [
+        { text: 'Cancel', onPress: () => console.log('Delete cancelled') },
+        {
+          text: 'Delete',
+          onPress: async () => {
+            await deleteHealthEntry(entryId);
+            Alert.alert('Success', 'Entry deleted successfully');
+          },
+          style: 'destructive',
+        },
+      ]
+    );
+  };
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -115,8 +133,16 @@ export default function CalendarScreen() {
           <View style={styles.entriesContainer}>
             <Text style={commonStyles.subtitle}>Entries for {dateString}</Text>
             {selectedEntries.map((entry) => (
-              <View key={entry.id} style={commonStyles.card}>
-                <Text style={commonStyles.text}>{entry.time}</Text>
+              <View key={entry.id} style={[commonStyles.card, styles.entryCard]}>
+                <View style={styles.entryHeader}>
+                  <Text style={commonStyles.text}>{entry.time}</Text>
+                  <Pressable
+                    onPress={() => handleDeleteEntry(entry.id)}
+                    style={styles.deleteEntryButton}
+                  >
+                    <IconSymbol name="trash.fill" color={colors.error} size={18} />
+                  </Pressable>
+                </View>
                 {entry.pulseResting && (
                   <Text style={commonStyles.textSecondary}>
                     Pulse: {entry.pulseResting} bpm
@@ -217,5 +243,18 @@ const styles = StyleSheet.create({
   noEntriesContainer: {
     alignItems: 'center',
     paddingVertical: 32,
+  },
+  entryCard: {
+    paddingTop: 12,
+  },
+  entryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  deleteEntryButton: {
+    padding: 8,
+    marginRight: -8,
   },
 });

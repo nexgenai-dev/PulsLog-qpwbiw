@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Stack, Link, Redirect } from "expo-router";
 import { ScrollView, Pressable, StyleSheet, View, Text, Platform } from "react-native";
@@ -44,6 +45,13 @@ export default function HomeScreen() {
       route: "/add-entry",
       icon: "plus.circle.fill",
       color: colors.secondary,
+    },
+    {
+      title: "⌚ Samsung Health",
+      description: "Sync data from your Galaxy Watch 7",
+      route: "/samsung-health",
+      icon: "heart.circle.fill",
+      color: colors.error,
     },
     {
       title: "ℹ️ Health Info",

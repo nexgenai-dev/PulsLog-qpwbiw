@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Platform, Pressable, Alert, Modal, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { IconSymbol } from "@/components/IconSymbol";
@@ -35,8 +35,7 @@ export default function FlowerSimulatorScreen() {
 
   const currentFlower = selectedFlower && gameState ? gameState.flowers.find(f => f.id === selectedFlower) : gameState?.flowers[0];
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  const handleUseGameItemPress = useCallback(async (itemId: string) => {
+  const handleUseGameItemPress = async (itemId: string) => {
     if (!currentFlower) {
       console.log('No current flower available');
       return;
@@ -46,7 +45,7 @@ export default function FlowerSimulatorScreen() {
     } catch (error) {
       console.log('Error using game item:', error);
     }
-  }, [currentFlower, useGameItem]);
+  };
 
   if (!gameState) {
     return null;

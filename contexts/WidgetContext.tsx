@@ -29,14 +29,45 @@ export interface HealthEntry {
   diastolicStanding?: number;
   notes?: string;
   activityLevel?: 'resting' | 'light' | 'sports';
+  mood?: number;
+}
+
+export interface DrinkEntry {
+  id: string;
+  date: string;
+  time: string;
+  amount: number;
+}
+
+export interface Reminder {
+  id: string;
+  type: 'pulse' | 'medication';
+  time: string;
+  enabled: boolean;
+  days?: string[];
+}
+
+export interface ForumMessage {
+  id: string;
+  author: string;
+  content: string;
+  timestamp: string;
+  likes: number;
 }
 
 interface WidgetContextType {
   userProfile: UserProfile | null;
   healthEntries: HealthEntry[];
+  drinkEntries: DrinkEntry[];
+  reminders: Reminder[];
+  forumMessages: ForumMessage[];
   addHealthEntry: (entry: HealthEntry) => Promise<void>;
   updateUserProfile: (profile: UserProfile) => Promise<void>;
   getEntriesByDate: (date: string) => HealthEntry[];
+  addDrinkEntry: (entry: DrinkEntry) => Promise<void>;
+  getDrinkEntriesByDate: (date: string) => DrinkEntry[];
+  updateReminders: (reminders: Reminder[]) => Promise<void>;
+  addForumMessage: (message: ForumMessage) => Promise<void>;
   isLoading: boolean;
   refreshWidget: () => void;
 }
@@ -46,6 +77,9 @@ const WidgetContext = createContext<WidgetContextType | undefined>(undefined);
 export function WidgetProvider({ children }: { children: ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [healthEntries, setHealthEntries] = useState<HealthEntry[]>([]);
+  const [drinkEntries, setDrinkEntries] = useState<DrinkEntry[]>([]);
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [forumMessages, setForumMessages] = useState<ForumMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -56,6 +90,9 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
     try {
       const profileData = await AsyncStorage.getItem('userProfile');
       const entriesData = await AsyncStorage.getItem('healthEntries');
+      const drinkData = await AsyncStorage.getItem('drinkEntries');
+      const remindersData = await AsyncStorage.getItem('reminders');
+      const forumData = await AsyncStorage.getItem('forumMessages');
 
       if (profileData) {
         setUserProfile(JSON.parse(profileData));
@@ -63,6 +100,18 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
 
       if (entriesData) {
         setHealthEntries(JSON.parse(entriesData));
+      }
+
+      if (drinkData) {
+        setDrinkEntries(JSON.parse(drinkData));
+      }
+
+      if (remindersData) {
+        setReminders(JSON.parse(remindersData));
+      }
+
+      if (forumData) {
+        setForumMessages(JSON.parse(forumData));
       }
     } catch (error) {
       console.log('Error loading data:', error);
@@ -94,6 +143,39 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
     return healthEntries.filter(entry => entry.date === date);
   };
 
+  const addDrinkEntry = async (entry: DrinkEntry) => {
+    try {
+      const newEntries = [...drinkEntries, entry];
+      setDrinkEntries(newEntries);
+      await AsyncStorage.setItem('drinkEntries', JSON.stringify(newEntries));
+    } catch (error) {
+      console.log('Error saving drink entry:', error);
+    }
+  };
+
+  const getDrinkEntriesByDate = (date: string) => {
+    return drinkEntries.filter(entry => entry.date === date);
+  };
+
+  const updateReminders = async (newReminders: Reminder[]) => {
+    try {
+      setReminders(newReminders);
+      await AsyncStorage.setItem('reminders', JSON.stringify(newReminders));
+    } catch (error) {
+      console.log('Error saving reminders:', error);
+    }
+  };
+
+  const addForumMessage = async (message: ForumMessage) => {
+    try {
+      const newMessages = [...forumMessages, message];
+      setForumMessages(newMessages);
+      await AsyncStorage.setItem('forumMessages', JSON.stringify(newMessages));
+    } catch (error) {
+      console.log('Error saving forum message:', error);
+    }
+  };
+
   const refreshWidget = () => {
     loadData();
   };
@@ -102,9 +184,16 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
     <WidgetContext.Provider value={{
       userProfile,
       healthEntries,
+      drinkEntries,
+      reminders,
+      forumMessages,
       addHealthEntry,
       updateUserProfile,
       getEntriesByDate,
+      addDrinkEntry,
+      getDrinkEntriesByDate,
+      updateReminders,
+      addForumMessage,
       isLoading,
       refreshWidget,
     }}>

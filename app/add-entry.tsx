@@ -23,6 +23,7 @@ export default function AddEntryScreen() {
   const [systolicStanding, setSystolicStanding] = useState('');
   const [diastolicStanding, setDiastolicStanding] = useState('');
   const [notes, setNotes] = useState('');
+  const [mood, setMood] = useState(5);
   const [activityLevel, setActivityLevel] = useState<'resting' | 'light' | 'sports'>('resting');
 
   const handleSave = async () => {
@@ -47,6 +48,7 @@ export default function AddEntryScreen() {
       systolicStanding: systolicStanding ? parseInt(systolicStanding) : undefined,
       diastolicStanding: diastolicStanding ? parseInt(diastolicStanding) : undefined,
       notes: notes || undefined,
+      mood,
       activityLevel,
     };
 
@@ -213,6 +215,33 @@ export default function AddEntryScreen() {
               onChangeText={setDiastolicStanding}
               keyboardType="number-pad"
             />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={commonStyles.subtitle}>Mood / Well-being</Text>
+          <Text style={[commonStyles.textSecondary, { marginBottom: 12 }]}>Mood: {mood} / 10</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
+              <Pressable
+                key={value}
+                onPress={() => setMood(value)}
+                style={[
+                  {
+                    width: 28,
+                    height: 28,
+                    borderRadius: 14,
+                    backgroundColor: mood === value ? colors.primary : colors.lightGray,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  },
+                ]}
+              >
+                <Text style={{ color: mood === value ? '#FFFFFF' : colors.text, fontWeight: '600', fontSize: 12 }}>
+                  {value}
+                </Text>
+              </Pressable>
+            ))}
           </View>
         </View>
 

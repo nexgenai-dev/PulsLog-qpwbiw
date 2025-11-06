@@ -5,6 +5,7 @@ import { IconSymbol } from "@/components/IconSymbol";
 import { useTheme } from "@react-navigation/native";
 import { colors, commonStyles } from "@/styles/commonStyles";
 import { useWidget } from "@/contexts/WidgetContext";
+import { DailyOverview, DrinkTracker } from "@/components/BodyScrollView";
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -51,6 +52,20 @@ export default function HomeScreen() {
       icon: "info.circle.fill",
       color: colors.accent,
     },
+    {
+      title: "🔔 Reminders",
+      description: "Set reminders for measurements & medication",
+      route: "/formsheet",
+      icon: "bell.fill",
+      color: colors.primary,
+    },
+    {
+      title: "💬 Forum",
+      description: "Connect with community members",
+      route: "/modal",
+      icon: "bubble.right.fill",
+      color: colors.secondary,
+    },
   ];
 
   return (
@@ -75,20 +90,9 @@ export default function HomeScreen() {
           </Text>
         </View>
 
-        <View style={styles.statsContainer}>
-          <View style={[styles.statCard, { borderLeftColor: colors.primary, borderLeftWidth: 4 }]}>
-            <Text style={styles.statLabel}>Age</Text>
-            <Text style={styles.statValue}>{userProfile.age}</Text>
-          </View>
-          <View style={[styles.statCard, { borderLeftColor: colors.secondary, borderLeftWidth: 4 }]}>
-            <Text style={styles.statLabel}>Height</Text>
-            <Text style={styles.statValue}>{userProfile.height} cm</Text>
-          </View>
-          <View style={[styles.statCard, { borderLeftColor: colors.accent, borderLeftWidth: 4 }]}>
-            <Text style={styles.statLabel}>Weight</Text>
-            <Text style={styles.statValue}>{userProfile.weight} kg</Text>
-          </View>
-        </View>
+        <DailyOverview />
+
+        <DrinkTracker />
 
         <View style={styles.menuContainer}>
           {menuItems.map((item, index) => (
@@ -131,32 +135,6 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 24,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: colors.card,
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.08)',
-    elevation: 2,
-  },
-  statLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: colors.textSecondary,
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
   },
   menuContainer: {
     marginBottom: 24,

@@ -161,6 +161,14 @@ const MAPPING = {
   "lightbulb.fill": "lightbulb",
   "moon.fill": "dark-mode",
   "sun.max.fill": "light-mode",
+
+  // Additional icons
+  "plus.circle.fill": "add-circle",
+  "bubble.right.fill": "chat-bubble",
+  "drop.fill": "water-drop",
+  "percent": "percent",
+  "smiley.fill": "sentiment-satisfied",
+  "pills.fill": "medication",
 } as Partial<
   Record<
     import("expo-symbols").SymbolViewProps["name"],
@@ -187,11 +195,18 @@ export function IconSymbol({
   style?: StyleProp<ViewStyle>;
   weight?: SymbolWeight;
 }) {
+  const iconName = MAPPING[name];
+  
+  if (!iconName) {
+    console.warn(`Icon mapping not found for: ${name}`);
+    return null;
+  }
+
   return (
     <MaterialIcons
       color={color}
       size={size}
-      name={MAPPING[name]}
+      name={iconName}
       style={style as StyleProp<TextStyle>}
     />
   );

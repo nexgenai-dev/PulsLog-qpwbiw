@@ -32,3 +32,5 @@ export function IconCircle({
     </View>
   );
 }
+
+export default IconCircle;

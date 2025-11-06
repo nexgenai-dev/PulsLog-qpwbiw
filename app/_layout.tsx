@@ -114,6 +114,22 @@ export default function RootLayout() {
                   presentation: "card",
                 }}
               />
+              <Stack.Screen
+                name="formsheet"
+                options={{
+                  title: "Reminders",
+                  presentation: "card",
+                  headerShown: true,
+                }}
+              />
+              <Stack.Screen
+                name="modal"
+                options={{
+                  title: "Community Forum",
+                  presentation: "card",
+                  headerShown: true,
+                }}
+              />
 
               {/* Modal Demo Screens */}
               <Stack.Screen

@@ -35,9 +35,17 @@ export default function FlowerSimulatorScreen() {
 
   const currentFlower = selectedFlower && gameState ? gameState.flowers.find(f => f.id === selectedFlower) : gameState?.flowers[0];
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const handleUseGameItemPress = useCallback(async (itemId: string) => {
-    if (!currentFlower) return;
-    await useGameItem(itemId, currentFlower.id);
+    if (!currentFlower) {
+      console.log('No current flower available');
+      return;
+    }
+    try {
+      await useGameItem(itemId, currentFlower.id);
+    } catch (error) {
+      console.log('Error using game item:', error);
+    }
   }, [currentFlower, useGameItem]);
 
   if (!gameState) {

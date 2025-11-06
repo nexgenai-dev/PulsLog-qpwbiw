@@ -11,6 +11,7 @@ export interface UserProfile {
   avgPulse: number;
   avgSystolic: number;
   avgDiastolic: number;
+  language?: 'en' | 'de' | 'es' | 'fr';
 }
 
 export interface HealthEntry {

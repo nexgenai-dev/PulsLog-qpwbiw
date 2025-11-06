@@ -169,6 +169,8 @@ const MAPPING = {
   "percent": "percent",
   "smiley.fill": "sentiment-satisfied",
   "pills.fill": "medication",
+  "ellipsis": "more-horiz",
+  "ellipsis.circle": "more-horiz",
 } as Partial<
   Record<
     import("expo-symbols").SymbolViewProps["name"],

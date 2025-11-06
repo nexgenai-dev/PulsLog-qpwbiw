@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { ScrollView, View, Text, TextInput, Pressable, StyleSheet, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
-import { colors, commonStyles } from '@/styles/commonStyles';
+import { colors, commonStyles, getTranslation, Language } from '@/styles/commonStyles';
 import { useWidget } from '@/contexts/WidgetContext';
 import { calculateAverageValues } from '@/utils/errorLogger';
 
@@ -11,6 +11,7 @@ export default function OnboardingScreen() {
   const theme = useTheme();
   const { updateUserProfile } = useWidget();
   const [step, setStep] = useState(0);
+  const [language, setLanguage] = useState<Language>('en');
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState<'male' | 'female' | 'other'>('other');
@@ -18,13 +19,15 @@ export default function OnboardingScreen() {
   const [weight, setWeight] = useState('');
 
   const handleNext = async () => {
-    if (step === 0 && name.trim()) {
+    if (step === 0) {
       setStep(1);
-    } else if (step === 1 && age.trim()) {
+    } else if (step === 1 && name.trim()) {
       setStep(2);
-    } else if (step === 2) {
+    } else if (step === 2 && age.trim()) {
       setStep(3);
-    } else if (step === 3 && height.trim() && weight.trim()) {
+    } else if (step === 3) {
+      setStep(4);
+    } else if (step === 4 && height.trim() && weight.trim()) {
       const profile = {
         name,
         age: parseInt(age),
@@ -34,6 +37,7 @@ export default function OnboardingScreen() {
         avgPulse: 70,
         avgSystolic: 120,
         avgDiastolic: 80,
+        language,
       };
 
       await updateUserProfile(profile);
@@ -52,14 +56,45 @@ export default function OnboardingScreen() {
       case 0:
         return (
           <View style={styles.stepContainer}>
-            <Text style={commonStyles.title}>Welcome to PulsLog</Text>
+            <Text style={commonStyles.title}>{getTranslation('onboarding.language', language)}</Text>
             <Text style={commonStyles.textSecondary}>
-              Track your health metrics and stay informed about your circulatory health.
+              {getTranslation('onboarding.language.description', language)}
             </Text>
-            <Text style={[commonStyles.subtitle, { marginTop: 24 }]}>What's your name?</Text>
+            <View style={styles.languageContainer}>
+              {(['en', 'de', 'es', 'fr'] as const).map((lang) => (
+                <Pressable
+                  key={lang}
+                  style={[
+                    styles.languageButton,
+                    language === lang && styles.languageButtonActive,
+                    language === lang && { backgroundColor: colors.primary },
+                  ]}
+                  onPress={() => setLanguage(lang)}
+                >
+                  <Text
+                    style={[
+                      styles.languageButtonText,
+                      language === lang && { color: '#fff' },
+                    ]}
+                  >
+                    {lang === 'en' ? 'English' : lang === 'de' ? 'Deutsch' : lang === 'es' ? 'Español' : 'Français'}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        );
+      case 1:
+        return (
+          <View style={styles.stepContainer}>
+            <Text style={commonStyles.title}>{getTranslation('onboarding.welcome', language)}</Text>
+            <Text style={commonStyles.textSecondary}>
+              {getTranslation('onboarding.welcome.description', language)}
+            </Text>
+            <Text style={[commonStyles.subtitle, { marginTop: 24 }]}>{getTranslation('onboarding.name', language)}</Text>
             <TextInput
               style={[commonStyles.input, { marginTop: 12 }]}
-              placeholder="Enter your name"
+              placeholder={getTranslation('onboarding.enterName', language)}
               placeholderTextColor={colors.textSecondary}
               value={name}
               onChangeText={setName}
@@ -67,16 +102,16 @@ export default function OnboardingScreen() {
             />
           </View>
         );
-      case 1:
+      case 2:
         return (
           <View style={styles.stepContainer}>
-            <Text style={commonStyles.title}>Your Age</Text>
+            <Text style={commonStyles.title}>{getTranslation('onboarding.age', language)}</Text>
             <Text style={commonStyles.textSecondary}>
-              This helps us calculate your baseline health metrics.
+              {getTranslation('onboarding.age.description', language)}
             </Text>
             <TextInput
               style={[commonStyles.input, { marginTop: 24 }]}
-              placeholder="Enter your age"
+              placeholder={getTranslation('onboarding.enterAge', language)}
               placeholderTextColor={colors.textSecondary}
               value={age}
               onChangeText={setAge}
@@ -85,12 +120,12 @@ export default function OnboardingScreen() {
             />
           </View>
         );
-      case 2:
+      case 3:
         return (
           <View style={styles.stepContainer}>
-            <Text style={commonStyles.title}>Your Gender</Text>
+            <Text style={commonStyles.title}>{getTranslation('onboarding.gender', language)}</Text>
             <Text style={commonStyles.textSecondary}>
-              This helps us provide personalized health insights.
+              {getTranslation('onboarding.gender.description', language)}
             </Text>
             <View style={styles.genderContainer}>
               {(['male', 'female', 'other'] as const).map((g) => (
@@ -109,23 +144,23 @@ export default function OnboardingScreen() {
                       gender === g && { color: '#fff' },
                     ]}
                   >
-                    {g.charAt(0).toUpperCase() + g.slice(1)}
+                    {getTranslation(`onboarding.${g}`, language)}
                   </Text>
                 </Pressable>
               ))}
             </View>
           </View>
         );
-      case 3:
+      case 4:
         return (
           <View style={styles.stepContainer}>
-            <Text style={commonStyles.title}>Your Measurements</Text>
+            <Text style={commonStyles.title}>{getTranslation('onboarding.measurements', language)}</Text>
             <Text style={commonStyles.textSecondary}>
-              Height (cm) and Weight (kg) help us calculate your health baseline.
+              {getTranslation('onboarding.measurements.description', language)}
             </Text>
             <TextInput
               style={[commonStyles.input, { marginTop: 24 }]}
-              placeholder="Height (cm)"
+              placeholder={getTranslation('onboarding.height', language)}
               placeholderTextColor={colors.textSecondary}
               value={height}
               onChangeText={setHeight}
@@ -134,7 +169,7 @@ export default function OnboardingScreen() {
             />
             <TextInput
               style={[commonStyles.input, { marginTop: 12 }]}
-              placeholder="Weight (kg)"
+              placeholder={getTranslation('onboarding.weight', language)}
               placeholderTextColor={colors.textSecondary}
               value={weight}
               onChangeText={setWeight}
@@ -163,7 +198,7 @@ export default function OnboardingScreen() {
             style={[styles.button, styles.backButton]}
             onPress={handleBack}
           >
-            <Text style={[styles.buttonText, { color: colors.primary }]}>Back</Text>
+            <Text style={[styles.buttonText, { color: colors.primary }]}>{getTranslation('onboarding.back', language)}</Text>
           </Pressable>
         )}
         <Pressable
@@ -171,7 +206,7 @@ export default function OnboardingScreen() {
           onPress={handleNext}
         >
           <Text style={[styles.buttonText, { color: '#fff' }]}>
-            {step === 3 ? 'Get Started' : 'Next'}
+            {step === 4 ? getTranslation('onboarding.getStarted', language) : getTranslation('onboarding.next', language)}
           </Text>
         </Pressable>
       </View>
@@ -188,6 +223,32 @@ const styles = StyleSheet.create({
   },
   stepContainer: {
     alignItems: 'center',
+  },
+  languageContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 24,
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  languageButton: {
+    flex: 1,
+    minWidth: '45%',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: colors.lightGray,
+    alignItems: 'center',
+    marginVertical: 6,
+  },
+  languageButtonActive: {
+    borderColor: colors.primary,
+  },
+  languageButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
   },
   genderContainer: {
     flexDirection: 'row',

@@ -17,7 +17,7 @@ export default function TabLayout() {
     {
       name: 'other',
       route: '/(tabs)/other',
-      icon: 'list.bullet',
+      icon: 'ellipsis',
       label: 'Other',
     },
     {

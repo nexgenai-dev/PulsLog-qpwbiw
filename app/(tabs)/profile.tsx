@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { IconSymbol } from "@/components/IconSymbol";
 import { GlassView } from "expo-glass-effect";
 import { useTheme } from "@react-navigation/native";
-import { colors, commonStyles } from "@/styles/commonStyles";
+import { colors, commonStyles, getTranslation, Language } from "@/styles/commonStyles";
 import { useWidget } from "@/contexts/WidgetContext";
 import { router } from "expo-router";
 import { calculateAverageValues } from "@/utils/errorLogger";
@@ -13,20 +13,23 @@ export default function ProfileScreen() {
   const theme = useTheme();
   const { userProfile, updateUserProfile, healthEntries } = useWidget();
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
   const [editHeight, setEditHeight] = useState(userProfile?.height.toString() || '');
   const [editWeight, setEditWeight] = useState(userProfile?.weight.toString() || '');
   const [editAge, setEditAge] = useState(userProfile?.age.toString() || '');
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(userProfile?.language || 'en');
+  const currentLanguage: Language = userProfile?.language || 'en';
 
   const averageValues = calculateAverageValues(healthEntries);
 
   const handleResetProfile = () => {
     Alert.alert(
-      'Reset Profile',
-      'Are you sure you want to reset your profile? This will take you back to the onboarding screen.',
+      getTranslation('profile.resetConfirm', currentLanguage),
+      getTranslation('profile.resetConfirmMessage', currentLanguage),
       [
-        { text: 'Cancel', onPress: () => console.log('Cancel pressed'), style: 'cancel' },
+        { text: getTranslation('profile.cancel', currentLanguage), onPress: () => console.log('Cancel pressed'), style: 'cancel' },
         {
-          text: 'Reset',
+          text: getTranslation('profile.resetProfile', currentLanguage),
           onPress: () => {
             router.replace('/onboarding');
           },
@@ -34,6 +37,18 @@ export default function ProfileScreen() {
         },
       ]
     );
+  };
+
+  const handleChangeLanguage = async () => {
+    if (userProfile) {
+      const updatedProfile = {
+        ...userProfile,
+        language: selectedLanguage,
+      };
+      await updateUserProfile(updatedProfile);
+      setIsLanguageModalVisible(false);
+      Alert.alert(getTranslation('profile.language', currentLanguage), getTranslation('profile.save', currentLanguage));
+    }
   };
 
   const handleSaveProfileChanges = async () => {
@@ -86,7 +101,7 @@ export default function ProfileScreen() {
 
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={commonStyles.subtitle}>Health Profile</Text>
+                <Text style={commonStyles.subtitle}>{getTranslation('profile.healthProfile', currentLanguage)}</Text>
                 <Pressable onPress={handleOpenEditModal}>
                   <IconSymbol name="pencil" size={20} color={colors.primary} />
                 </Pressable>
@@ -94,44 +109,44 @@ export default function ProfileScreen() {
               <View style={styles.infoRow}>
                 <IconSymbol name="ruler" size={20} color={colors.primary} />
                 <View style={styles.infoContent}>
-                  <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Height</Text>
+                  <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>{getTranslation('profile.height', currentLanguage)}</Text>
                   <Text style={[styles.infoText, { color: colors.text }]}>{userProfile.height} cm</Text>
                 </View>
               </View>
               <View style={styles.infoRow}>
                 <IconSymbol name="scalemass" size={20} color={colors.primary} />
                 <View style={styles.infoContent}>
-                  <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Weight</Text>
+                  <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>{getTranslation('profile.weight', currentLanguage)}</Text>
                   <Text style={[styles.infoText, { color: colors.text }]}>{userProfile.weight} kg</Text>
                 </View>
               </View>
               <View style={styles.infoRow}>
                 <IconSymbol name="heart.fill" size={20} color={colors.secondary} />
                 <View style={styles.infoContent}>
-                  <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Avg. Pulse</Text>
+                  <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>{getTranslation('profile.avgPulse', currentLanguage)}</Text>
                   <Text style={[styles.infoText, { color: colors.text }]}>{userProfile.avgPulse} bpm</Text>
                 </View>
               </View>
             </View>
 
             <View style={styles.section}>
-              <Text style={commonStyles.subtitle}>Average Pulse by Activity Level</Text>
+              <Text style={commonStyles.subtitle}>{getTranslation('profile.averagePulseByActivity', currentLanguage)}</Text>
               <View style={commonStyles.card}>
                 <View style={styles.activityPulseRow}>
                   <View style={styles.activityPulseItem}>
-                    <Text style={[styles.activityLabel, { color: colors.textSecondary }]}>Ruhe</Text>
+                    <Text style={[styles.activityLabel, { color: colors.textSecondary }]}>{getTranslation('profile.resting', currentLanguage)}</Text>
                     <Text style={[styles.activityPulseValue, { color: colors.primary }]}>
                       {averageValues.avgPulseResting || '—'} bpm
                     </Text>
                   </View>
                   <View style={styles.activityPulseItem}>
-                    <Text style={[styles.activityLabel, { color: colors.textSecondary }]}>Leichte Aktivität</Text>
+                    <Text style={[styles.activityLabel, { color: colors.textSecondary }]}>{getTranslation('profile.lightActivity', currentLanguage)}</Text>
                     <Text style={[styles.activityPulseValue, { color: colors.secondary }]}>
                       {averageValues.avgPulseLight || '—'} bpm
                     </Text>
                   </View>
                   <View style={styles.activityPulseItem}>
-                    <Text style={[styles.activityLabel, { color: colors.textSecondary }]}>Sportliche Aktivität</Text>
+                    <Text style={[styles.activityLabel, { color: colors.textSecondary }]}>{getTranslation('profile.sportsActivity', currentLanguage)}</Text>
                     <Text style={[styles.activityPulseValue, { color: colors.error }]}>
                       {averageValues.avgPulseSports || '—'} bpm
                     </Text>
@@ -141,13 +156,13 @@ export default function ProfileScreen() {
             </View>
 
             <View style={styles.section}>
-              <Text style={commonStyles.subtitle}>Health Baselines</Text>
+              <Text style={commonStyles.subtitle}>{getTranslation('profile.healthBaselines', currentLanguage)}</Text>
               <View style={commonStyles.card}>
                 <Text style={commonStyles.textSecondary}>
-                  Systolic: {userProfile.avgSystolic} mmHg
+                  {getTranslation('profile.systolic', currentLanguage)}: {userProfile.avgSystolic} mmHg
                 </Text>
                 <Text style={commonStyles.textSecondary}>
-                  Diastolic: {userProfile.avgDiastolic} mmHg
+                  {getTranslation('profile.diastolic', currentLanguage)}: {userProfile.avgDiastolic} mmHg
                 </Text>
                 <Text style={[commonStyles.textSecondary, { marginTop: 8 }]}>
                   These values help detect significant deviations in your health metrics.
@@ -156,13 +171,31 @@ export default function ProfileScreen() {
             </View>
 
             <View style={styles.section}>
-              <Text style={commonStyles.subtitle}>About PulsLog</Text>
+              <Text style={commonStyles.subtitle}>{getTranslation('profile.language', currentLanguage)}</Text>
+              <Pressable
+                style={commonStyles.card}
+                onPress={() => {
+                  setSelectedLanguage(currentLanguage);
+                  setIsLanguageModalVisible(true);
+                }}
+              >
+                <View style={styles.languageRow}>
+                  <Text style={commonStyles.text}>
+                    {currentLanguage === 'en' ? 'English' : currentLanguage === 'de' ? 'Deutsch' : currentLanguage === 'es' ? 'Español' : 'Français'}
+                  </Text>
+                  <IconSymbol name="chevron.right" size={20} color={colors.textSecondary} />
+                </View>
+              </Pressable>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={commonStyles.subtitle}>{getTranslation('profile.about', currentLanguage)}</Text>
               <View style={commonStyles.card}>
                 <Text style={commonStyles.textSecondary}>
-                  PulsLog helps you track your pulse, blood pressure, and medication data. It's designed for people with POTS and other circulatory disorders.
+                  {getTranslation('profile.aboutDescription', currentLanguage)}
                 </Text>
                 <Text style={[commonStyles.textSecondary, { marginTop: 12 }]}>
-                  Version 1.0.0
+                  {getTranslation('profile.version', currentLanguage)}
                 </Text>
               </View>
             </View>
@@ -171,7 +204,7 @@ export default function ProfileScreen() {
               style={[styles.button, { backgroundColor: colors.error }]}
               onPress={handleResetProfile}
             >
-              <Text style={[styles.buttonText, { color: '#fff' }]}>Reset Profile</Text>
+              <Text style={[styles.buttonText, { color: '#fff' }]}>{getTranslation('profile.resetProfile', currentLanguage)}</Text>
             </Pressable>
           </>
         )}
@@ -188,7 +221,7 @@ export default function ProfileScreen() {
             <Pressable onPress={() => setIsEditModalVisible(false)}>
               <IconSymbol name="xmark" size={24} color={colors.text} />
             </Pressable>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Edit Profile</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{getTranslation('profile.editProfile', currentLanguage)}</Text>
             <View style={{ width: 24 }} />
           </View>
 
@@ -198,10 +231,10 @@ export default function ProfileScreen() {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.editSection}>
-              <Text style={[styles.editLabel, { color: colors.text }]}>Height (cm)</Text>
+              <Text style={[styles.editLabel, { color: colors.text }]}>{getTranslation('onboarding.height', currentLanguage)}</Text>
               <TextInput
                 style={[commonStyles.input, { color: colors.text }]}
-                placeholder="Height in cm"
+                placeholder={getTranslation('onboarding.height', currentLanguage)}
                 placeholderTextColor={colors.textSecondary}
                 value={editHeight}
                 onChangeText={setEditHeight}
@@ -210,10 +243,10 @@ export default function ProfileScreen() {
             </View>
 
             <View style={styles.editSection}>
-              <Text style={[styles.editLabel, { color: colors.text }]}>Weight (kg)</Text>
+              <Text style={[styles.editLabel, { color: colors.text }]}>{getTranslation('onboarding.weight', currentLanguage)}</Text>
               <TextInput
                 style={[commonStyles.input, { color: colors.text }]}
-                placeholder="Weight in kg"
+                placeholder={getTranslation('onboarding.weight', currentLanguage)}
                 placeholderTextColor={colors.textSecondary}
                 value={editWeight}
                 onChangeText={setEditWeight}
@@ -222,10 +255,10 @@ export default function ProfileScreen() {
             </View>
 
             <View style={styles.editSection}>
-              <Text style={[styles.editLabel, { color: colors.text }]}>Age (years)</Text>
+              <Text style={[styles.editLabel, { color: colors.text }]}>{getTranslation('onboarding.age', currentLanguage)}</Text>
               <TextInput
                 style={[commonStyles.input, { color: colors.text }]}
-                placeholder="Age in years"
+                placeholder={getTranslation('onboarding.age', currentLanguage)}
                 placeholderTextColor={colors.textSecondary}
                 value={editAge}
                 onChangeText={setEditAge}
@@ -239,13 +272,72 @@ export default function ProfileScreen() {
               style={[styles.modalButton, { backgroundColor: colors.lightGray }]}
               onPress={() => setIsEditModalVisible(false)}
             >
-              <Text style={[styles.modalButtonText, { color: colors.text }]}>Cancel</Text>
+              <Text style={[styles.modalButtonText, { color: colors.text }]}>{getTranslation('profile.cancel', currentLanguage)}</Text>
             </Pressable>
             <Pressable
               style={[styles.modalButton, { backgroundColor: colors.primary }]}
               onPress={handleSaveProfileChanges}
             >
-              <Text style={[styles.modalButtonText, { color: '#fff' }]}>Save</Text>
+              <Text style={[styles.modalButtonText, { color: '#fff' }]}>{getTranslation('profile.save', currentLanguage)}</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      </Modal>
+
+      <Modal
+        visible={isLanguageModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setIsLanguageModalVisible(false)}
+      >
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <View style={styles.modalHeader}>
+            <Pressable onPress={() => setIsLanguageModalVisible(false)}>
+              <IconSymbol name="xmark" size={24} color={colors.text} />
+            </Pressable>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{getTranslation('profile.language', currentLanguage)}</Text>
+            <View style={{ width: 24 }} />
+          </View>
+
+          <ScrollView
+            style={styles.modalContent}
+            contentContainerStyle={styles.modalContentContainer}
+            showsVerticalScrollIndicator={false}
+          >
+            {(['en', 'de', 'es', 'fr'] as const).map((lang) => (
+              <Pressable
+                key={lang}
+                style={[
+                  commonStyles.card,
+                  styles.languageOption,
+                  selectedLanguage === lang && styles.languageOptionActive,
+                ]}
+                onPress={() => setSelectedLanguage(lang)}
+              >
+                <View style={styles.languageOptionContent}>
+                  <Text style={[commonStyles.text, selectedLanguage === lang && { color: colors.primary, fontWeight: '600' }]}>
+                    {lang === 'en' ? 'English' : lang === 'de' ? 'Deutsch' : lang === 'es' ? 'Español' : 'Français'}
+                  </Text>
+                  {selectedLanguage === lang && (
+                    <IconSymbol name="checkmark" size={20} color={colors.primary} />
+                  )}
+                </View>
+              </Pressable>
+            ))}
+          </ScrollView>
+
+          <View style={styles.modalFooter}>
+            <Pressable
+              style={[styles.modalButton, { backgroundColor: colors.lightGray }]}
+              onPress={() => setIsLanguageModalVisible(false)}
+            >
+              <Text style={[styles.modalButtonText, { color: colors.text }]}>{getTranslation('profile.cancel', currentLanguage)}</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.modalButton, { backgroundColor: colors.primary }]}
+              onPress={handleChangeLanguage}
+            >
+              <Text style={[styles.modalButtonText, { color: '#fff' }]}>{getTranslation('profile.save', currentLanguage)}</Text>
             </Pressable>
           </View>
         </SafeAreaView>
@@ -300,6 +392,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.lightGray,
+  },
+  languageRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   infoContent: {
     flex: 1,
@@ -393,5 +490,17 @@ const styles = StyleSheet.create({
   modalButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  languageOption: {
+    marginVertical: 8,
+  },
+  languageOptionActive: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+  },
+  languageOptionContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
 });

@@ -33,11 +33,16 @@ export default function FlowerSimulatorScreen() {
   const [showNewFlowerModal, setShowNewFlowerModal] = useState(false);
   const [newFlowerName, setNewFlowerName] = useState('');
 
+  const currentFlower = selectedFlower && gameState ? gameState.flowers.find(f => f.id === selectedFlower) : gameState?.flowers[0];
+
+  const handleUseGameItemPress = useCallback(async (itemId: string) => {
+    if (!currentFlower) return;
+    await useGameItem(itemId, currentFlower.id);
+  }, [currentFlower, useGameItem]);
+
   if (!gameState) {
     return null;
   }
-
-  const currentFlower = selectedFlower ? gameState.flowers.find(f => f.id === selectedFlower) : gameState.flowers[0];
 
   const getFlowerLevel = (xp: number) => {
     for (let i = FLOWER_LEVELS.length - 1; i >= 0; i--) {
@@ -166,11 +171,6 @@ export default function FlowerSimulatorScreen() {
     await updateGameState(newState);
     Alert.alert('Success', `+${challenge.reward} coins!`);
   };
-
-  const handleUseGameItemPress = useCallback(async (itemId: string) => {
-    if (!currentFlower) return;
-    await useGameItem(itemId, currentFlower.id);
-  }, [currentFlower, useGameItem]);
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>

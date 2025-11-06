@@ -118,42 +118,19 @@ export default function RootLayout() {
                 name="formsheet"
                 options={{
                   title: "Reminders",
-                  presentation: "card",
-                  headerShown: true,
-                }}
-              />
-              <Stack.Screen
-                name="modal"
-                options={{
-                  title: "Community Forum",
-                  presentation: "card",
-                  headerShown: true,
-                }}
-              />
-
-              {/* Modal Demo Screens */}
-              <Stack.Screen
-                name="modal"
-                options={{
-                  presentation: "modal",
-                  title: "Standard Modal",
-                }}
-              />
-              <Stack.Screen
-                name="formsheet"
-                options={{
                   presentation: "formSheet",
-                  title: "Form Sheet Modal",
+                  headerShown: true,
                   sheetGrabberVisible: true,
                   sheetAllowedDetents: [0.5, 0.8, 1.0],
                   sheetCornerRadius: 20,
                 }}
               />
               <Stack.Screen
-                name="transparent-modal"
+                name="modal"
                 options={{
-                  presentation: "transparentModal",
-                  headerShown: false,
+                  title: "Community Forum",
+                  presentation: "modal",
+                  headerShown: true,
                 }}
               />
             </Stack>

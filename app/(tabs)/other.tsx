@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, ScrollView, Platform, Pressable, Alert } from "
 import { SafeAreaView } from "react-native-safe-area-context";
 import { IconSymbol } from "@/components/IconSymbol";
 import { useTheme } from "@react-navigation/native";
-import { colors, commonStyles } from "@/styles/commonStyles";
+import { colors, commonStyles, getTranslation, Language } from "@/styles/commonStyles";
 import { useWidget } from "@/contexts/WidgetContext";
 import { router } from "expo-router";
 

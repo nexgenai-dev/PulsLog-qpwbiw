@@ -162,6 +162,13 @@ export default function RootLayout() {
                   presentation: "card",
                 }}
               />
+              <Stack.Screen
+                name="games"
+                options={{
+                  headerShown: false,
+                  presentation: "card",
+                }}
+              />
             </Stack>
             <SystemBars style={"auto"} />
             </GestureHandlerRootView>

@@ -161,6 +161,57 @@ export interface AppSettings {
   profileImageUri?: string;
 }
 
+export interface GameItem {
+  id: string;
+  name: string;
+  quantity: number;
+  xpBonus: number;
+}
+
+export interface Flower {
+  id: string;
+  name: string;
+  level: number;
+  xp: number;
+  lastWateredDate: string;
+  wateredToday: boolean;
+  rescuesUsed: number;
+  createdAt: string;
+}
+
+export interface GameChallenge {
+  id: string;
+  type: 'daily' | 'weekly' | 'special';
+  title: string;
+  description: string;
+  reward: number;
+  completed: boolean;
+  completedAt?: string;
+  progress: number;
+  target: number;
+}
+
+export interface GameEvent {
+  id: string;
+  title: string;
+  description: string;
+  type: 'xp_boost' | 'free_items' | 'special';
+  xpMultiplier?: number;
+  startDate: string;
+  endDate: string;
+  active: boolean;
+}
+
+export interface GameState {
+  coins: number;
+  flowers: Flower[];
+  inventory: GameItem[];
+  challenges: GameChallenge[];
+  events: GameEvent[];
+  totalXp: number;
+  lastDailyRewardDate?: string;
+}
+
 interface WidgetContextType {
   userProfile: UserProfile | null;
   healthEntries: HealthEntry[];
@@ -175,6 +226,7 @@ interface WidgetContextType {
   recipes: Recipe[];
   userStats: UserStats | null;
   appSettings: AppSettings | null;
+  gameState: GameState | null;
   addHealthEntry: (entry: HealthEntry) => Promise<void>;
   updateUserProfile: (profile: UserProfile) => Promise<void>;
   getEntriesByDate: (date: string) => HealthEntry[];
@@ -204,6 +256,10 @@ interface WidgetContextType {
   updateUserStats: (stats: UserStats) => Promise<void>;
   addPoints: (points: number) => Promise<void>;
   updateAppSettings: (settings: AppSettings) => Promise<void>;
+  updateGameState: (state: GameState) => Promise<void>;
+  waterFlower: (flowerId: string) => Promise<void>;
+  addGameCoins: (amount: number) => Promise<void>;
+  useGameItem: (itemId: string, flowerId: string) => Promise<void>;
   isLoading: boolean;
   refreshWidget: () => void;
 }
@@ -224,6 +280,7 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
+  const [gameState, setGameState] = useState<GameState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -245,6 +302,7 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
       const recipesData = await AsyncStorage.getItem('recipes');
       const userStatsData = await AsyncStorage.getItem('userStats');
       const appSettingsData = await AsyncStorage.getItem('appSettings');
+      const gameStateData = await AsyncStorage.getItem('gameState');
 
       if (profileData) {
         setUserProfile(JSON.parse(profileData));
@@ -317,6 +375,63 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
         };
         setAppSettings(defaultSettings);
         await AsyncStorage.setItem('appSettings', JSON.stringify(defaultSettings));
+      }
+
+      if (gameStateData) {
+        setGameState(JSON.parse(gameStateData));
+      } else {
+        const defaultGameState: GameState = {
+          coins: 0,
+          flowers: [
+            {
+              id: '1',
+              name: 'Blüte',
+              level: 1,
+              xp: 0,
+              lastWateredDate: new Date().toISOString().split('T')[0],
+              wateredToday: false,
+              rescuesUsed: 0,
+              createdAt: new Date().toISOString(),
+            },
+          ],
+          inventory: [],
+          challenges: [
+            {
+              id: 'daily-1',
+              type: 'daily',
+              title: 'Gieße alle Blumen heute',
+              description: 'Gieße alle deine Blumen heute',
+              reward: 10,
+              completed: false,
+              progress: 0,
+              target: 1,
+            },
+            {
+              id: 'weekly-1',
+              type: 'weekly',
+              title: 'Pflege jede Blume 7 Tage hintereinander',
+              description: 'Gieße deine Blumen 7 Tage hintereinander',
+              reward: 50,
+              completed: false,
+              progress: 0,
+              target: 7,
+            },
+            {
+              id: 'special-1',
+              type: 'special',
+              title: 'Level 3 bei allen Blumen erreichen',
+              description: 'Bringe alle deine Blumen auf Level 3',
+              reward: 100,
+              completed: false,
+              progress: 0,
+              target: 1,
+            },
+          ],
+          events: [],
+          totalXp: 0,
+        };
+        setGameState(defaultGameState);
+        await AsyncStorage.setItem('gameState', JSON.stringify(defaultGameState));
       }
     } catch (error) {
       console.log('Error loading data:', error);
@@ -590,6 +705,109 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateGameState = async (state: GameState) => {
+    try {
+      setGameState(state);
+      await AsyncStorage.setItem('gameState', JSON.stringify(state));
+    } catch (error) {
+      console.log('Error updating game state:', error);
+    }
+  };
+
+  const waterFlower = async (flowerId: string) => {
+    if (!gameState) return;
+
+    const updatedFlowers = gameState.flowers.map(flower => {
+      if (flower.id === flowerId) {
+        const today = new Date().toISOString().split('T')[0];
+        const xpGain = 10;
+        const newXp = flower.xp + xpGain;
+        const xpPerLevel = 50;
+        const newLevel = Math.floor(newXp / xpPerLevel) + 1;
+
+        return {
+          ...flower,
+          xp: newXp,
+          level: newLevel,
+          lastWateredDate: today,
+          wateredToday: true,
+        };
+      }
+      return flower;
+    });
+
+    const updatedChallenges = gameState.challenges.map(challenge => {
+      if (challenge.type === 'daily' && !challenge.completed) {
+        return {
+          ...challenge,
+          progress: updatedFlowers.filter(f => f.wateredToday).length,
+          completed: updatedFlowers.filter(f => f.wateredToday).length >= challenge.target,
+          completedAt: updatedFlowers.filter(f => f.wateredToday).length >= challenge.target ? new Date().toISOString() : undefined,
+        };
+      }
+      return challenge;
+    });
+
+    const newState: GameState = {
+      ...gameState,
+      flowers: updatedFlowers,
+      challenges: updatedChallenges,
+      totalXp: gameState.totalXp + 10,
+    };
+
+    await updateGameState(newState);
+  };
+
+  const addGameCoins = async (amount: number) => {
+    if (!gameState) return;
+
+    const newState: GameState = {
+      ...gameState,
+      coins: gameState.coins + amount,
+    };
+
+    await updateGameState(newState);
+  };
+
+  const useGameItem = async (itemId: string, flowerId: string) => {
+    if (!gameState) return;
+
+    const item = gameState.inventory.find(i => i.id === itemId);
+    if (!item) return;
+
+    const updatedInventory = gameState.inventory.map(i => {
+      if (i.id === itemId) {
+        return { ...i, quantity: i.quantity - 1 };
+      }
+      return i;
+    }).filter(i => i.quantity > 0);
+
+    const updatedFlowers = gameState.flowers.map(flower => {
+      if (flower.id === flowerId) {
+        const xpGain = item.xpBonus;
+        const newXp = flower.xp + xpGain;
+        const xpPerLevel = 50;
+        const newLevel = Math.floor(newXp / xpPerLevel) + 1;
+
+        return {
+          ...flower,
+          xp: newXp,
+          level: newLevel,
+        };
+      }
+      return flower;
+    });
+
+    const newState: GameState = {
+      ...gameState,
+      inventory: updatedInventory,
+      flowers: updatedFlowers,
+      totalXp: gameState.totalXp + item.xpBonus,
+    };
+
+    await updateGameState(newState);
+  };
+
   const refreshWidget = () => {
     loadData();
   };
@@ -609,6 +827,7 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
       recipes,
       userStats,
       appSettings,
+      gameState,
       addHealthEntry,
       updateUserProfile,
       getEntriesByDate,
@@ -638,6 +857,10 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
       updateUserStats,
       addPoints,
       updateAppSettings,
+      updateGameState,
+      waterFlower,
+      addGameCoins,
+      useGameItem,
       isLoading,
       refreshWidget,
     }}>

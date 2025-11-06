@@ -46,7 +46,14 @@ const sendErrorToParent = (level: string, message: string, data: any) => {
 
 const calculateAverageValues = (entries: HealthEntry[]) => {
   if (entries.length === 0) {
-    return { avgPulse: 0, avgSystolic: 0, avgDiastolic: 0 };
+    return { 
+      avgPulse: 0, 
+      avgSystolic: 0, 
+      avgDiastolic: 0,
+      avgPulseResting: 0,
+      avgPulseLight: 0,
+      avgPulseSports: 0,
+    };
   }
 
   let totalPulse = 0;
@@ -56,10 +63,29 @@ const calculateAverageValues = (entries: HealthEntry[]) => {
   let systolicCount = 0;
   let diastolicCount = 0;
 
+  let totalPulseResting = 0;
+  let pulseRestingCount = 0;
+  let totalPulseLight = 0;
+  let pulseLightCount = 0;
+  let totalPulseSports = 0;
+  let pulseSportsCount = 0;
+
   entries.forEach(entry => {
     if (entry.pulseResting) {
       totalPulse += entry.pulseResting;
       pulseCount++;
+
+      // Categorize by activity level
+      if (entry.activityLevel === 'resting') {
+        totalPulseResting += entry.pulseResting;
+        pulseRestingCount++;
+      } else if (entry.activityLevel === 'light') {
+        totalPulseLight += entry.pulseResting;
+        pulseLightCount++;
+      } else if (entry.activityLevel === 'sports') {
+        totalPulseSports += entry.pulseResting;
+        pulseSportsCount++;
+      }
     }
     if (entry.systolicResting) {
       totalSystolic += entry.systolicResting;
@@ -75,6 +101,9 @@ const calculateAverageValues = (entries: HealthEntry[]) => {
     avgPulse: pulseCount > 0 ? Math.round(totalPulse / pulseCount) : 0,
     avgSystolic: systolicCount > 0 ? Math.round(totalSystolic / systolicCount) : 0,
     avgDiastolic: diastolicCount > 0 ? Math.round(totalDiastolic / diastolicCount) : 0,
+    avgPulseResting: pulseRestingCount > 0 ? Math.round(totalPulseResting / pulseRestingCount) : 0,
+    avgPulseLight: pulseLightCount > 0 ? Math.round(totalPulseLight / pulseLightCount) : 0,
+    avgPulseSports: pulseSportsCount > 0 ? Math.round(totalPulseSports / pulseSportsCount) : 0,
   };
 };
 

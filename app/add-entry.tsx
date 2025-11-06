@@ -23,6 +23,7 @@ export default function AddEntryScreen() {
   const [systolicStanding, setSystolicStanding] = useState('');
   const [diastolicStanding, setDiastolicStanding] = useState('');
   const [notes, setNotes] = useState('');
+  const [activityLevel, setActivityLevel] = useState<'resting' | 'light' | 'sports'>('resting');
 
   const handleSave = async () => {
     if (!pulseResting && !systolicResting) {
@@ -46,6 +47,7 @@ export default function AddEntryScreen() {
       systolicStanding: systolicStanding ? parseInt(systolicStanding) : undefined,
       diastolicStanding: diastolicStanding ? parseInt(diastolicStanding) : undefined,
       notes: notes || undefined,
+      activityLevel,
     };
 
     if (userProfile) {
@@ -77,6 +79,30 @@ export default function AddEntryScreen() {
             value={time}
             onChangeText={setTime}
           />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={commonStyles.subtitle}>Activity Level</Text>
+          <View style={styles.activityButtonsContainer}>
+            {(['resting', 'light', 'sports'] as const).map((level) => (
+              <Pressable
+                key={level}
+                style={[
+                  styles.activityButton,
+                  activityLevel === level && styles.activityButtonActive,
+                  { backgroundColor: activityLevel === level ? colors.primary : colors.lightGray }
+                ]}
+                onPress={() => setActivityLevel(level)}
+              >
+                <Text style={[
+                  styles.activityButtonText,
+                  { color: activityLevel === level ? '#fff' : colors.text }
+                ]}>
+                  {level === 'resting' ? 'Ruhe' : level === 'light' ? 'Leichte Aktivität' : 'Sportliche Aktivität'}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -241,6 +267,27 @@ const styles = StyleSheet.create({
   notesInput: {
     textAlignVertical: 'top',
     paddingTop: 10,
+  },
+  activityButtonsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  activityButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activityButtonActive: {
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.15)',
+    elevation: 3,
+  },
+  activityButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',

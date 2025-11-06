@@ -28,6 +28,7 @@ export interface HealthEntry {
   systolicStanding?: number;
   diastolicStanding?: number;
   notes?: string;
+  activityLevel?: 'resting' | 'light' | 'sports';
 }
 
 interface WidgetContextType {

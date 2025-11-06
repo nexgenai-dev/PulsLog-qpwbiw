@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView, Platform, Pressable, Alert } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, ScrollView, Platform, Pressable, Alert, TextInput, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { IconSymbol } from "@/components/IconSymbol";
 import { GlassView } from "expo-glass-effect";
@@ -7,10 +7,17 @@ import { useTheme } from "@react-navigation/native";
 import { colors, commonStyles } from "@/styles/commonStyles";
 import { useWidget } from "@/contexts/WidgetContext";
 import { router } from "expo-router";
+import { calculateAverageValues } from "@/utils/errorLogger";
 
 export default function ProfileScreen() {
   const theme = useTheme();
-  const { userProfile } = useWidget();
+  const { userProfile, updateUserProfile, healthEntries } = useWidget();
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [editHeight, setEditHeight] = useState(userProfile?.height.toString() || '');
+  const [editWeight, setEditWeight] = useState(userProfile?.weight.toString() || '');
+  const [editAge, setEditAge] = useState(userProfile?.age.toString() || '');
+
+  const averageValues = calculateAverageValues(healthEntries);
 
   const handleResetProfile = () => {
     Alert.alert(
@@ -27,6 +34,34 @@ export default function ProfileScreen() {
         },
       ]
     );
+  };
+
+  const handleSaveProfileChanges = async () => {
+    if (!editHeight || !editWeight || !editAge) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    if (userProfile) {
+      const updatedProfile = {
+        ...userProfile,
+        height: parseInt(editHeight),
+        weight: parseInt(editWeight),
+        age: parseInt(editAge),
+      };
+      await updateUserProfile(updatedProfile);
+      setIsEditModalVisible(false);
+      Alert.alert('Success', 'Profile updated successfully');
+    }
+  };
+
+  const handleOpenEditModal = () => {
+    if (userProfile) {
+      setEditHeight(userProfile.height.toString());
+      setEditWeight(userProfile.weight.toString());
+      setEditAge(userProfile.age.toString());
+      setIsEditModalVisible(true);
+    }
   };
 
   return (
@@ -50,7 +85,12 @@ export default function ProfileScreen() {
             </View>
 
             <View style={styles.section}>
-              <Text style={commonStyles.subtitle}>Health Profile</Text>
+              <View style={styles.sectionHeader}>
+                <Text style={commonStyles.subtitle}>Health Profile</Text>
+                <Pressable onPress={handleOpenEditModal}>
+                  <IconSymbol name="pencil" size={20} color={colors.primary} />
+                </Pressable>
+              </View>
               <View style={styles.infoRow}>
                 <IconSymbol name="ruler" size={20} color={colors.primary} />
                 <View style={styles.infoContent}>
@@ -70,6 +110,32 @@ export default function ProfileScreen() {
                 <View style={styles.infoContent}>
                   <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Avg. Pulse</Text>
                   <Text style={[styles.infoText, { color: colors.text }]}>{userProfile.avgPulse} bpm</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={commonStyles.subtitle}>Average Pulse by Activity Level</Text>
+              <View style={commonStyles.card}>
+                <View style={styles.activityPulseRow}>
+                  <View style={styles.activityPulseItem}>
+                    <Text style={[styles.activityLabel, { color: colors.textSecondary }]}>Ruhe</Text>
+                    <Text style={[styles.activityPulseValue, { color: colors.primary }]}>
+                      {averageValues.avgPulseResting || '—'} bpm
+                    </Text>
+                  </View>
+                  <View style={styles.activityPulseItem}>
+                    <Text style={[styles.activityLabel, { color: colors.textSecondary }]}>Leichte Aktivität</Text>
+                    <Text style={[styles.activityPulseValue, { color: colors.secondary }]}>
+                      {averageValues.avgPulseLight || '—'} bpm
+                    </Text>
+                  </View>
+                  <View style={styles.activityPulseItem}>
+                    <Text style={[styles.activityLabel, { color: colors.textSecondary }]}>Sportliche Aktivität</Text>
+                    <Text style={[styles.activityPulseValue, { color: colors.error }]}>
+                      {averageValues.avgPulseSports || '—'} bpm
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
@@ -110,6 +176,80 @@ export default function ProfileScreen() {
           </>
         )}
       </ScrollView>
+
+      <Modal
+        visible={isEditModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setIsEditModalVisible(false)}
+      >
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <View style={styles.modalHeader}>
+            <Pressable onPress={() => setIsEditModalVisible(false)}>
+              <IconSymbol name="xmark" size={24} color={colors.text} />
+            </Pressable>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Edit Profile</Text>
+            <View style={{ width: 24 }} />
+          </View>
+
+          <ScrollView
+            style={styles.modalContent}
+            contentContainerStyle={styles.modalContentContainer}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.editSection}>
+              <Text style={[styles.editLabel, { color: colors.text }]}>Height (cm)</Text>
+              <TextInput
+                style={[commonStyles.input, { color: colors.text }]}
+                placeholder="Height in cm"
+                placeholderTextColor={colors.textSecondary}
+                value={editHeight}
+                onChangeText={setEditHeight}
+                keyboardType="number-pad"
+              />
+            </View>
+
+            <View style={styles.editSection}>
+              <Text style={[styles.editLabel, { color: colors.text }]}>Weight (kg)</Text>
+              <TextInput
+                style={[commonStyles.input, { color: colors.text }]}
+                placeholder="Weight in kg"
+                placeholderTextColor={colors.textSecondary}
+                value={editWeight}
+                onChangeText={setEditWeight}
+                keyboardType="decimal-pad"
+              />
+            </View>
+
+            <View style={styles.editSection}>
+              <Text style={[styles.editLabel, { color: colors.text }]}>Age (years)</Text>
+              <TextInput
+                style={[commonStyles.input, { color: colors.text }]}
+                placeholder="Age in years"
+                placeholderTextColor={colors.textSecondary}
+                value={editAge}
+                onChangeText={setEditAge}
+                keyboardType="number-pad"
+              />
+            </View>
+          </ScrollView>
+
+          <View style={styles.modalFooter}>
+            <Pressable
+              style={[styles.modalButton, { backgroundColor: colors.lightGray }]}
+              onPress={() => setIsEditModalVisible(false)}
+            >
+              <Text style={[styles.modalButtonText, { color: colors.text }]}>Cancel</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.modalButton, { backgroundColor: colors.primary }]}
+              onPress={handleSaveProfileChanges}
+            >
+              <Text style={[styles.modalButtonText, { color: '#fff' }]}>Save</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -147,6 +287,12 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 20,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -167,6 +313,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 2,
   },
+  activityPulseRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    gap: 12,
+  },
+  activityPulseItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  activityLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginBottom: 6,
+  },
+  activityPulseValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
   button: {
     paddingVertical: 14,
     paddingHorizontal: 16,
@@ -175,6 +340,57 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalContainer: {
+    flex: 1,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGray,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  modalContent: {
+    flex: 1,
+  },
+  modalContentContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+  },
+  editSection: {
+    marginBottom: 20,
+  },
+  editLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingBottom: Platform.OS === 'android' ? 24 : 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.lightGray,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonText: {
     fontSize: 16,
     fontWeight: '600',
   },

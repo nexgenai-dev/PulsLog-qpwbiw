@@ -141,6 +141,27 @@ export default function RootLayout() {
                   headerShown: true,
                 }}
               />
+              <Stack.Screen
+                name="achievements"
+                options={{
+                  title: "Achievements",
+                  presentation: "card",
+                }}
+              />
+              <Stack.Screen
+                name="settings"
+                options={{
+                  title: "Settings",
+                  presentation: "card",
+                }}
+              />
+              <Stack.Screen
+                name="other/recipes"
+                options={{
+                  title: "Recipes",
+                  presentation: "card",
+                }}
+              />
             </Stack>
             <SystemBars style={"auto"} />
             </GestureHandlerRootView>

@@ -1,15 +1,16 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ScrollView, View, Text, TextInput, Pressable, StyleSheet, Platform, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
 import { colors, commonStyles, getTranslation, Language } from '@/styles/commonStyles';
 import { useWidget } from '@/contexts/WidgetContext';
 import { checkHealthWarnings } from '@/utils/errorLogger';
+import { IconSymbol } from '@/components/IconSymbol';
 
 export default function AddEntryScreen() {
   const theme = useTheme();
-  const { addHealthEntry, userProfile } = useWidget();
+  const { addHealthEntry, userProfile, addPoints } = useWidget();
   const currentLanguage: Language = userProfile?.language || 'en';
   const [time, setTime] = useState(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
   const [medication, setMedication] = useState('');
@@ -27,40 +28,41 @@ export default function AddEntryScreen() {
   const [mood, setMood] = useState(5);
   const [activityLevel, setActivityLevel] = useState<'resting' | 'light' | 'sports'>('resting');
 
+  const currentEntry = useMemo(() => ({
+    id: Date.now().toString(),
+    date: new Date().toISOString().split('T')[0],
+    time,
+    medication: medication || undefined,
+    medicationAmount: medicationAmount || undefined,
+    pulseResting: pulseResting ? parseInt(pulseResting) : undefined,
+    pulseSitting: pulseSitting ? parseInt(pulseSitting) : undefined,
+    pulseStanding: pulseStanding ? parseInt(pulseStanding) : undefined,
+    systolicResting: systolicResting ? parseInt(systolicResting) : undefined,
+    diastolicResting: diastolicResting ? parseInt(diastolicResting) : undefined,
+    systolicSitting: systolicSitting ? parseInt(systolicSitting) : undefined,
+    diastolicSitting: diastolicSitting ? parseInt(diastolicSitting) : undefined,
+    systolicStanding: systolicStanding ? parseInt(systolicStanding) : undefined,
+    diastolicStanding: diastolicStanding ? parseInt(diastolicStanding) : undefined,
+    notes: notes || undefined,
+    mood,
+    activityLevel,
+  }), [time, medication, medicationAmount, pulseResting, pulseSitting, pulseStanding, systolicResting, diastolicResting, systolicSitting, diastolicSitting, systolicStanding, diastolicStanding, notes, mood, activityLevel]);
+
+  const warnings = useMemo(() => {
+    if (userProfile) {
+      return checkHealthWarnings(currentEntry, userProfile);
+    }
+    return [];
+  }, [currentEntry, userProfile]);
+
   const handleSave = async () => {
     if (!pulseResting && !systolicResting) {
       Alert.alert('Error', getTranslation('addEntry.error', currentLanguage));
       return;
     }
 
-    const entry = {
-      id: Date.now().toString(),
-      date: new Date().toISOString().split('T')[0],
-      time,
-      medication: medication || undefined,
-      medicationAmount: medicationAmount || undefined,
-      pulseResting: pulseResting ? parseInt(pulseResting) : undefined,
-      pulseSitting: pulseSitting ? parseInt(pulseSitting) : undefined,
-      pulseStanding: pulseStanding ? parseInt(pulseStanding) : undefined,
-      systolicResting: systolicResting ? parseInt(systolicResting) : undefined,
-      diastolicResting: diastolicResting ? parseInt(diastolicResting) : undefined,
-      systolicSitting: systolicSitting ? parseInt(systolicSitting) : undefined,
-      diastolicSitting: diastolicSitting ? parseInt(diastolicSitting) : undefined,
-      systolicStanding: systolicStanding ? parseInt(systolicStanding) : undefined,
-      diastolicStanding: diastolicStanding ? parseInt(diastolicStanding) : undefined,
-      notes: notes || undefined,
-      mood,
-      activityLevel,
-    };
-
-    if (userProfile) {
-      const warnings = checkHealthWarnings(entry, userProfile);
-      if (warnings.length > 0) {
-        Alert.alert('Health Alert', warnings.join('\n'));
-      }
-    }
-
-    await addHealthEntry(entry);
+    await addHealthEntry(currentEntry);
+    await addPoints(20);
     Alert.alert('Success', getTranslation('addEntry.success', currentLanguage));
     router.back();
   };
@@ -72,6 +74,20 @@ export default function AddEntryScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={commonStyles.title}>{getTranslation('addEntry.title', currentLanguage)}</Text>
+
+        {warnings.length > 0 && (
+          <View style={[styles.warningContainer, { backgroundColor: colors.warning + '20', borderColor: colors.warning }]}>
+            <IconSymbol name="exclamationmark.triangle.fill" size={20} color={colors.warning} />
+            <View style={styles.warningContent}>
+              <Text style={[styles.warningTitle, { color: colors.warning }]}>Health Alert</Text>
+              {warnings.map((warning, index) => (
+                <Text key={index} style={[commonStyles.textSecondary, { color: colors.warning }]}>
+                  • {warning}
+                </Text>
+              ))}
+            </View>
+          </View>
+        )}
 
         <View style={styles.section}>
           <Text style={commonStyles.subtitle}>{getTranslation('addEntry.time', currentLanguage)}</Text>
@@ -348,6 +364,23 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
+    fontWeight: '600',
+  },
+  warningContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 16,
+    alignItems: 'flex-start',
+  },
+  warningContent: {
+    flex: 1,
+    gap: 4,
+  },
+  warningTitle: {
+    fontSize: 14,
     fontWeight: '600',
   },
 });

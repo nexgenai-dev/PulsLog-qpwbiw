@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Platform, Pressable, Alert, TextInput, Modal } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Platform, Pressable, Alert, TextInput, Modal, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { IconSymbol } from "@/components/IconSymbol";
 import { GlassView } from "expo-glass-effect";
@@ -8,10 +8,11 @@ import { colors, commonStyles, getTranslation, Language } from "@/styles/commonS
 import { useWidget } from "@/contexts/WidgetContext";
 import { router } from "expo-router";
 import { calculateAverageValues } from "@/utils/errorLogger";
+import * as ImagePicker from 'expo-image-picker';
 
 export default function ProfileScreen() {
   const theme = useTheme();
-  const { userProfile, updateUserProfile, healthEntries } = useWidget();
+  const { userProfile, updateUserProfile, healthEntries, userStats, appSettings, updateAppSettings } = useWidget();
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
   const [editHeight, setEditHeight] = useState(userProfile?.height.toString() || '');
@@ -19,6 +20,22 @@ export default function ProfileScreen() {
   const [editAge, setEditAge] = useState(userProfile?.age.toString() || '');
   const [selectedLanguage, setSelectedLanguage] = useState<Language>(userProfile?.language || 'en');
   const currentLanguage: Language = userProfile?.language || 'en';
+
+  const handleChangeProfilePicture = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled && appSettings) {
+      await updateAppSettings({
+        ...appSettings,
+        profileImageUri: result.assets[0].uri,
+      });
+    }
+  };
 
   const averageValues = calculateAverageValues(healthEntries);
 
@@ -91,13 +108,29 @@ export default function ProfileScreen() {
       >
         {userProfile && (
           <>
-            <View style={styles.profileHeader}>
-              <IconSymbol name="person.circle.fill" size={80} color={colors.primary} />
+            <Pressable
+              style={styles.profileHeader}
+              onPress={handleChangeProfilePicture}
+            >
+              {appSettings?.profileImageUri ? (
+                <Image
+                  source={{ uri: appSettings.profileImageUri }}
+                  style={styles.profileImage}
+                />
+              ) : (
+                <IconSymbol name="person.circle.fill" size={80} color={colors.primary} />
+              )}
               <Text style={[styles.name, { color: colors.text }]}>{userProfile.name}</Text>
               <Text style={[styles.email, { color: colors.textSecondary }]}>
                 {userProfile.age} years old • {userProfile.gender}
               </Text>
-            </View>
+              {userStats && (
+                <View style={styles.levelBadge}>
+                  <IconSymbol name="star.fill" size={16} color={colors.accent} />
+                  <Text style={styles.levelBadgeText}>Level {userStats.level}</Text>
+                </View>
+              )}
+            </Pressable>
 
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
@@ -198,6 +231,23 @@ export default function ProfileScreen() {
                   {getTranslation('profile.version', currentLanguage)}
                 </Text>
               </View>
+            </View>
+
+            <View style={styles.buttonRow}>
+              <Pressable
+                style={[styles.button, { backgroundColor: colors.primary, flex: 1 }]}
+                onPress={() => router.push('/achievements')}
+              >
+                <IconSymbol name="star.fill" size={20} color="#fff" />
+                <Text style={[styles.buttonText, { color: '#fff' }]}>Achievements</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.button, { backgroundColor: colors.secondary, flex: 1, marginLeft: 8 }]}
+                onPress={() => router.push('/settings')}
+              >
+                <IconSymbol name="gear" size={20} color="#fff" />
+                <Text style={[styles.buttonText, { color: '#fff' }]}>Settings</Text>
+              </Pressable>
             </View>
 
             <Pressable
@@ -369,6 +419,26 @@ const styles = StyleSheet.create({
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
     elevation: 3,
   },
+  profileImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
+  levelBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.accent + '20',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginTop: 8,
+  },
+  levelBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.accent,
+  },
   name: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -434,11 +504,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
     marginVertical: 20,
+    flexDirection: 'row',
+    gap: 8,
   },
   buttonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginVertical: 20,
   },
   modalContainer: {
     flex: 1,

@@ -10,7 +10,7 @@ import { router } from "expo-router";
 
 export default function OtherScreen() {
   const theme = useTheme();
-  const { todoLists, shoppingLists, notes } = useWidget();
+  const { todoLists, shoppingLists, notes, recipes } = useWidget();
 
   const menuItems = [
     {
@@ -28,11 +28,18 @@ export default function OtherScreen() {
       color: colors.secondary,
     },
     {
+      title: "📖 Recipes",
+      description: `${recipes.length} recipe${recipes.length !== 1 ? 's' : ''}`,
+      route: "/other/recipes",
+      icon: "book.fill",
+      color: colors.accent,
+    },
+    {
       title: "📝 Notes",
       description: `${notes.length} note${notes.length !== 1 ? 's' : ''}`,
       route: "/other/notes",
       icon: "note.text",
-      color: colors.accent,
+      color: colors.warning,
     },
   ];
 

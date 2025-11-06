@@ -1,19 +1,20 @@
 
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Platform, Pressable, Alert, TextInput, Modal } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Platform, Pressable, Alert, TextInput, Modal, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { IconSymbol } from "@/components/IconSymbol";
 import { useTheme } from "@react-navigation/native";
 import { colors, commonStyles, getTranslation, Language } from "@/styles/commonStyles";
 import { useWidget } from "@/contexts/WidgetContext";
 import { router } from "expo-router";
-import { ShoppingList, ShoppingItem } from "@/contexts/WidgetContext";
+import { ShoppingList, ShoppingItem, Recipe } from "@/contexts/WidgetContext";
+import * as ImagePicker from 'expo-image-picker';
 
 const CATEGORIES = ['Fruits', 'Vegetables', 'Dairy', 'Meat', 'Drinks', 'Bakery', 'Other'];
 
 export default function ShoppingScreen() {
   const theme = useTheme();
-  const { shoppingLists, addShoppingList, updateShoppingList, deleteShoppingList, userProfile } = useWidget();
+  const { shoppingLists, addShoppingList, updateShoppingList, deleteShoppingList, userProfile, addPoints } = useWidget();
   const currentLanguage: Language = userProfile?.language || 'en';
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -85,6 +86,7 @@ export default function ShoppingScreen() {
     };
 
     await updateShoppingList(updatedList);
+    await addPoints(5);
     setNewItemName('');
     setNewItemQuantity('');
     setNewItemCategory('Other');

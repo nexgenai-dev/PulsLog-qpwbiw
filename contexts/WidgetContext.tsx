@@ -112,6 +112,55 @@ export interface Note {
   time?: string;
 }
 
+export interface Appointment {
+  id: string;
+  date: string;
+  time: string;
+  title: string;
+  notes: string;
+}
+
+export interface Recipe {
+  id: string;
+  title: string;
+  imageUri?: string;
+  ingredients: Array<{
+    id: string;
+    name: string;
+    quantity: number;
+    unit: string;
+  }>;
+  instructions: string;
+  createdAt: string;
+}
+
+export interface Achievement {
+  id: string;
+  type: 'consecutive_days' | 'todos_completed' | 'recipes_created' | 'shopping_items';
+  tier: number;
+  unlockedAt?: string;
+}
+
+export interface UserStats {
+  totalPoints: number;
+  level: number;
+  levelProgress: number;
+  consecutiveDays: number;
+  lastEntryDate?: string;
+  todosCompleted: number;
+  recipesCreated: number;
+  shoppingItemsAdded: number;
+  achievements: Achievement[];
+}
+
+export interface AppSettings {
+  theme: 'light' | 'dark' | 'auto';
+  fontSize: 'small' | 'medium' | 'large';
+  securityCode?: string;
+  securityEnabled: boolean;
+  profileImageUri?: string;
+}
+
 interface WidgetContextType {
   userProfile: UserProfile | null;
   healthEntries: HealthEntry[];
@@ -122,6 +171,10 @@ interface WidgetContextType {
   todoLists: TodoList[];
   shoppingLists: ShoppingList[];
   notes: Note[];
+  appointments: Appointment[];
+  recipes: Recipe[];
+  userStats: UserStats | null;
+  appSettings: AppSettings | null;
   addHealthEntry: (entry: HealthEntry) => Promise<void>;
   updateUserProfile: (profile: UserProfile) => Promise<void>;
   getEntriesByDate: (date: string) => HealthEntry[];
@@ -141,6 +194,16 @@ interface WidgetContextType {
   addNote: (note: Note) => Promise<void>;
   updateNote: (note: Note) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
+  addAppointment: (appointment: Appointment) => Promise<void>;
+  updateAppointment: (appointment: Appointment) => Promise<void>;
+  deleteAppointment: (id: string) => Promise<void>;
+  getAppointmentsByDate: (date: string) => Appointment[];
+  addRecipe: (recipe: Recipe) => Promise<void>;
+  updateRecipe: (recipe: Recipe) => Promise<void>;
+  deleteRecipe: (id: string) => Promise<void>;
+  updateUserStats: (stats: UserStats) => Promise<void>;
+  addPoints: (points: number) => Promise<void>;
+  updateAppSettings: (settings: AppSettings) => Promise<void>;
   isLoading: boolean;
   refreshWidget: () => void;
 }
@@ -157,6 +220,10 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
   const [todoLists, setTodoLists] = useState<TodoList[]>([]);
   const [shoppingLists, setShoppingLists] = useState<ShoppingList[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -174,6 +241,10 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
       const todoListsData = await AsyncStorage.getItem('todoLists');
       const shoppingListsData = await AsyncStorage.getItem('shoppingLists');
       const notesData = await AsyncStorage.getItem('notes');
+      const appointmentsData = await AsyncStorage.getItem('appointments');
+      const recipesData = await AsyncStorage.getItem('recipes');
+      const userStatsData = await AsyncStorage.getItem('userStats');
+      const appSettingsData = await AsyncStorage.getItem('appSettings');
 
       if (profileData) {
         setUserProfile(JSON.parse(profileData));
@@ -209,6 +280,43 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
 
       if (notesData) {
         setNotes(JSON.parse(notesData));
+      }
+
+      if (appointmentsData) {
+        setAppointments(JSON.parse(appointmentsData));
+      }
+
+      if (recipesData) {
+        setRecipes(JSON.parse(recipesData));
+      }
+
+      if (userStatsData) {
+        setUserStats(JSON.parse(userStatsData));
+      } else {
+        const defaultStats: UserStats = {
+          totalPoints: 0,
+          level: 1,
+          levelProgress: 0,
+          consecutiveDays: 0,
+          todosCompleted: 0,
+          recipesCreated: 0,
+          shoppingItemsAdded: 0,
+          achievements: [],
+        };
+        setUserStats(defaultStats);
+        await AsyncStorage.setItem('userStats', JSON.stringify(defaultStats));
+      }
+
+      if (appSettingsData) {
+        setAppSettings(JSON.parse(appSettingsData));
+      } else {
+        const defaultSettings: AppSettings = {
+          theme: 'auto',
+          fontSize: 'medium',
+          securityEnabled: false,
+        };
+        setAppSettings(defaultSettings);
+        await AsyncStorage.setItem('appSettings', JSON.stringify(defaultSettings));
       }
     } catch (error) {
       console.log('Error loading data:', error);
@@ -386,6 +494,102 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const addAppointment = async (appointment: Appointment) => {
+    try {
+      const newAppointments = [...appointments, appointment];
+      setAppointments(newAppointments);
+      await AsyncStorage.setItem('appointments', JSON.stringify(newAppointments));
+    } catch (error) {
+      console.log('Error saving appointment:', error);
+    }
+  };
+
+  const updateAppointment = async (appointment: Appointment) => {
+    try {
+      const newAppointments = appointments.map(a => a.id === appointment.id ? appointment : a);
+      setAppointments(newAppointments);
+      await AsyncStorage.setItem('appointments', JSON.stringify(newAppointments));
+    } catch (error) {
+      console.log('Error updating appointment:', error);
+    }
+  };
+
+  const deleteAppointment = async (id: string) => {
+    try {
+      const newAppointments = appointments.filter(a => a.id !== id);
+      setAppointments(newAppointments);
+      await AsyncStorage.setItem('appointments', JSON.stringify(newAppointments));
+    } catch (error) {
+      console.log('Error deleting appointment:', error);
+    }
+  };
+
+  const getAppointmentsByDate = (date: string) => {
+    return appointments.filter(a => a.date === date);
+  };
+
+  const addRecipe = async (recipe: Recipe) => {
+    try {
+      const newRecipes = [...recipes, recipe];
+      setRecipes(newRecipes);
+      await AsyncStorage.setItem('recipes', JSON.stringify(newRecipes));
+      await addPoints(50);
+    } catch (error) {
+      console.log('Error saving recipe:', error);
+    }
+  };
+
+  const updateRecipe = async (recipe: Recipe) => {
+    try {
+      const newRecipes = recipes.map(r => r.id === recipe.id ? recipe : r);
+      setRecipes(newRecipes);
+      await AsyncStorage.setItem('recipes', JSON.stringify(newRecipes));
+    } catch (error) {
+      console.log('Error updating recipe:', error);
+    }
+  };
+
+  const deleteRecipe = async (id: string) => {
+    try {
+      const newRecipes = recipes.filter(r => r.id !== id);
+      setRecipes(newRecipes);
+      await AsyncStorage.setItem('recipes', JSON.stringify(newRecipes));
+    } catch (error) {
+      console.log('Error deleting recipe:', error);
+    }
+  };
+
+  const updateUserStats = async (stats: UserStats) => {
+    try {
+      setUserStats(stats);
+      await AsyncStorage.setItem('userStats', JSON.stringify(stats));
+    } catch (error) {
+      console.log('Error updating user stats:', error);
+    }
+  };
+
+  const addPoints = async (points: number) => {
+    if (!userStats) return;
+
+    const newStats = { ...userStats };
+    newStats.totalPoints += points;
+
+    const pointsPerLevel = 500;
+    newStats.level = Math.floor(newStats.totalPoints / pointsPerLevel) + 1;
+    newStats.levelProgress = (newStats.totalPoints % pointsPerLevel) / pointsPerLevel;
+
+    await updateUserStats(newStats);
+  };
+
+  const updateAppSettings = async (settings: AppSettings) => {
+    try {
+      setAppSettings(settings);
+      await AsyncStorage.setItem('appSettings', JSON.stringify(settings));
+    } catch (error) {
+      console.log('Error updating app settings:', error);
+    }
+  };
+
   const refreshWidget = () => {
     loadData();
   };
@@ -401,6 +605,10 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
       todoLists,
       shoppingLists,
       notes,
+      appointments,
+      recipes,
+      userStats,
+      appSettings,
       addHealthEntry,
       updateUserProfile,
       getEntriesByDate,
@@ -420,6 +628,16 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
       addNote,
       updateNote,
       deleteNote,
+      addAppointment,
+      updateAppointment,
+      deleteAppointment,
+      getAppointmentsByDate,
+      addRecipe,
+      updateRecipe,
+      deleteRecipe,
+      updateUserStats,
+      addPoints,
+      updateAppSettings,
       isLoading,
       refreshWidget,
     }}>

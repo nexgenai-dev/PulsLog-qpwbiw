@@ -12,7 +12,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function TodosScreen() {
   const theme = useTheme();
-  const { todoLists, addTodoList, updateTodoList, deleteTodoList, userProfile } = useWidget();
+  const { todoLists, addTodoList, updateTodoList, deleteTodoList, userProfile, addPoints } = useWidget();
   const currentLanguage: Language = userProfile?.language || 'en';
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -94,6 +94,9 @@ export default function TodosScreen() {
   const handleToggleTask = async (taskId: string) => {
     if (!selectedList) return;
 
+    const task = selectedList.tasks.find(t => t.id === taskId);
+    const isCompleting = task && !task.completed;
+
     const updatedTasks = selectedList.tasks.map(t =>
       t.id === taskId ? { ...t, completed: !t.completed } : t
     );
@@ -102,6 +105,10 @@ export default function TodosScreen() {
       ...selectedList,
       tasks: updatedTasks,
     });
+
+    if (isCompleting) {
+      await addPoints(10);
+    }
   };
 
   const handleDeleteTask = (taskId: string) => {

@@ -167,9 +167,11 @@ export default function FlowerSimulatorScreen() {
     Alert.alert('Success', `+${challenge.reward} coins!`);
   };
 
-  const handleUseGameItem = async (itemId: string) => {
-    if (!currentFlower) return;
-    await useGameItem(itemId, currentFlower.id);
+  const handleUseGameItemPress = (itemId: string) => {
+    return async () => {
+      if (!currentFlower) return;
+      await useGameItem(itemId, currentFlower.id);
+    };
   };
 
   return (
@@ -260,7 +262,7 @@ export default function FlowerSimulatorScreen() {
                     </View>
                     <Pressable
                       style={[styles.useButton, { backgroundColor: colors.secondary }]}
-                      onPress={() => handleUseGameItem(item.id)}
+                      onPress={handleUseGameItemPress(item.id)}
                     >
                       <Text style={[styles.useButtonText, { color: '#fff' }]}>
                         {getTranslation('games.use', currentLanguage)}

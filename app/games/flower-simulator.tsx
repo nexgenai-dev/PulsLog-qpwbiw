@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView, Platform, Pressable, Alert, Modal, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { IconSymbol } from "@/components/IconSymbol";
@@ -167,10 +167,10 @@ export default function FlowerSimulatorScreen() {
     Alert.alert('Success', `+${challenge.reward} coins!`);
   };
 
-  const handleUseGameItemPress = async (itemId: string) => {
+  const handleUseGameItemPress = useCallback(async (itemId: string) => {
     if (!currentFlower) return;
     await useGameItem(itemId, currentFlower.id);
-  };
+  }, [currentFlower, useGameItem]);
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>

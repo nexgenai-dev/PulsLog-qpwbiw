@@ -35,13 +35,15 @@ export default function FlowerSimulatorScreen() {
 
   const currentFlower = selectedFlower && gameState ? gameState.flowers.find(f => f.id === selectedFlower) : gameState?.flowers[0];
 
-  const handleUseGameItemPress = async (itemId: string) => {
+  const handleUseGameItemPress = (itemId: string) => {
     if (!currentFlower) {
       console.log('No current flower available');
       return;
     }
     try {
-      await useGameItem(itemId, currentFlower.id);
+      useGameItem(itemId, currentFlower.id).catch((error) => {
+        console.log('Error using game item:', error);
+      });
     } catch (error) {
       console.log('Error using game item:', error);
     }

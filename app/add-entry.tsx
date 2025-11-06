@@ -3,13 +3,14 @@ import React, { useState } from 'react';
 import { ScrollView, View, Text, TextInput, Pressable, StyleSheet, Platform, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
-import { colors, commonStyles } from '@/styles/commonStyles';
+import { colors, commonStyles, getTranslation, Language } from '@/styles/commonStyles';
 import { useWidget } from '@/contexts/WidgetContext';
 import { checkHealthWarnings } from '@/utils/errorLogger';
 
 export default function AddEntryScreen() {
   const theme = useTheme();
   const { addHealthEntry, userProfile } = useWidget();
+  const currentLanguage: Language = userProfile?.language || 'en';
   const [time, setTime] = useState(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
   const [medication, setMedication] = useState('');
   const [medicationAmount, setMedicationAmount] = useState('');
@@ -28,7 +29,7 @@ export default function AddEntryScreen() {
 
   const handleSave = async () => {
     if (!pulseResting && !systolicResting) {
-      Alert.alert('Error', 'Please enter at least pulse or blood pressure data');
+      Alert.alert('Error', getTranslation('addEntry.error', currentLanguage));
       return;
     }
 
@@ -60,7 +61,7 @@ export default function AddEntryScreen() {
     }
 
     await addHealthEntry(entry);
-    Alert.alert('Success', 'Entry saved successfully');
+    Alert.alert('Success', getTranslation('addEntry.success', currentLanguage));
     router.back();
   };
 
@@ -70,10 +71,10 @@ export default function AddEntryScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={commonStyles.title}>Add Health Entry</Text>
+        <Text style={commonStyles.title}>{getTranslation('addEntry.title', currentLanguage)}</Text>
 
         <View style={styles.section}>
-          <Text style={commonStyles.subtitle}>Time</Text>
+          <Text style={commonStyles.subtitle}>{getTranslation('addEntry.time', currentLanguage)}</Text>
           <TextInput
             style={commonStyles.input}
             placeholder="HH:MM"
@@ -84,7 +85,7 @@ export default function AddEntryScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={commonStyles.subtitle}>Activity Level</Text>
+          <Text style={commonStyles.subtitle}>{getTranslation('addEntry.activityLevel', currentLanguage)}</Text>
           <View style={styles.activityButtonsContainer}>
             {(['resting', 'light', 'sports'] as const).map((level) => (
               <Pressable
@@ -100,7 +101,7 @@ export default function AddEntryScreen() {
                   styles.activityButtonText,
                   { color: activityLevel === level ? '#fff' : colors.text }
                 ]}>
-                  {level === 'resting' ? 'Ruhe' : level === 'light' ? 'Leichte Aktivität' : 'Sportliche Aktivität'}
+                  {level === 'resting' ? getTranslation('addEntry.resting', currentLanguage) : level === 'light' ? getTranslation('addEntry.light', currentLanguage) : getTranslation('addEntry.sports', currentLanguage)}
                 </Text>
               </Pressable>
             ))}
@@ -108,17 +109,17 @@ export default function AddEntryScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={commonStyles.subtitle}>Medication</Text>
+          <Text style={commonStyles.subtitle}>{getTranslation('addEntry.medication', currentLanguage)}</Text>
           <TextInput
             style={commonStyles.input}
-            placeholder="Medication name"
+            placeholder={getTranslation('addEntry.medicationName', currentLanguage)}
             placeholderTextColor={colors.textSecondary}
             value={medication}
             onChangeText={setMedication}
           />
           <TextInput
             style={commonStyles.input}
-            placeholder="Amount (e.g., 1 tablet, 5ml)"
+            placeholder={getTranslation('addEntry.medicationAmount', currentLanguage)}
             placeholderTextColor={colors.textSecondary}
             value={medicationAmount}
             onChangeText={setMedicationAmount}
@@ -126,11 +127,11 @@ export default function AddEntryScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={commonStyles.subtitle}>Pulse (bpm)</Text>
+          <Text style={commonStyles.subtitle}>{getTranslation('addEntry.pulse', currentLanguage)}</Text>
           <View style={styles.row}>
             <TextInput
               style={[commonStyles.input, styles.halfInput]}
-              placeholder="Resting"
+              placeholder={getTranslation('addEntry.pulseResting', currentLanguage)}
               placeholderTextColor={colors.textSecondary}
               value={pulseResting}
               onChangeText={setPulseResting}
@@ -138,7 +139,7 @@ export default function AddEntryScreen() {
             />
             <TextInput
               style={[commonStyles.input, styles.halfInput]}
-              placeholder="Sitting"
+              placeholder={getTranslation('addEntry.pulseSitting', currentLanguage)}
               placeholderTextColor={colors.textSecondary}
               value={pulseSitting}
               onChangeText={setPulseSitting}
@@ -147,7 +148,7 @@ export default function AddEntryScreen() {
           </View>
           <TextInput
             style={commonStyles.input}
-            placeholder="Standing"
+            placeholder={getTranslation('addEntry.pulseStanding', currentLanguage)}
             placeholderTextColor={colors.textSecondary}
             value={pulseStanding}
             onChangeText={setPulseStanding}
@@ -156,12 +157,12 @@ export default function AddEntryScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={commonStyles.subtitle}>Blood Pressure (mmHg)</Text>
-          <Text style={commonStyles.textSecondary}>Resting</Text>
+          <Text style={commonStyles.subtitle}>{getTranslation('addEntry.bloodPressure', currentLanguage)}</Text>
+          <Text style={commonStyles.textSecondary}>{getTranslation('addEntry.pulseResting', currentLanguage)}</Text>
           <View style={styles.row}>
             <TextInput
               style={[commonStyles.input, styles.halfInput]}
-              placeholder="Systolic"
+              placeholder={getTranslation('addEntry.systolic', currentLanguage)}
               placeholderTextColor={colors.textSecondary}
               value={systolicResting}
               onChangeText={setSystolicResting}
@@ -169,7 +170,7 @@ export default function AddEntryScreen() {
             />
             <TextInput
               style={[commonStyles.input, styles.halfInput]}
-              placeholder="Diastolic"
+              placeholder={getTranslation('addEntry.diastolic', currentLanguage)}
               placeholderTextColor={colors.textSecondary}
               value={diastolicResting}
               onChangeText={setDiastolicResting}
@@ -177,11 +178,11 @@ export default function AddEntryScreen() {
             />
           </View>
 
-          <Text style={[commonStyles.textSecondary, { marginTop: 12 }]}>Sitting</Text>
+          <Text style={[commonStyles.textSecondary, { marginTop: 12 }]}>{getTranslation('addEntry.pulseSitting', currentLanguage)}</Text>
           <View style={styles.row}>
             <TextInput
               style={[commonStyles.input, styles.halfInput]}
-              placeholder="Systolic"
+              placeholder={getTranslation('addEntry.systolic', currentLanguage)}
               placeholderTextColor={colors.textSecondary}
               value={systolicSitting}
               onChangeText={setSystolicSitting}
@@ -189,7 +190,7 @@ export default function AddEntryScreen() {
             />
             <TextInput
               style={[commonStyles.input, styles.halfInput]}
-              placeholder="Diastolic"
+              placeholder={getTranslation('addEntry.diastolic', currentLanguage)}
               placeholderTextColor={colors.textSecondary}
               value={diastolicSitting}
               onChangeText={setDiastolicSitting}
@@ -197,11 +198,11 @@ export default function AddEntryScreen() {
             />
           </View>
 
-          <Text style={[commonStyles.textSecondary, { marginTop: 12 }]}>Standing</Text>
+          <Text style={[commonStyles.textSecondary, { marginTop: 12 }]}>{getTranslation('addEntry.pulseStanding', currentLanguage)}</Text>
           <View style={styles.row}>
             <TextInput
               style={[commonStyles.input, styles.halfInput]}
-              placeholder="Systolic"
+              placeholder={getTranslation('addEntry.systolic', currentLanguage)}
               placeholderTextColor={colors.textSecondary}
               value={systolicStanding}
               onChangeText={setSystolicStanding}
@@ -209,7 +210,7 @@ export default function AddEntryScreen() {
             />
             <TextInput
               style={[commonStyles.input, styles.halfInput]}
-              placeholder="Diastolic"
+              placeholder={getTranslation('addEntry.diastolic', currentLanguage)}
               placeholderTextColor={colors.textSecondary}
               value={diastolicStanding}
               onChangeText={setDiastolicStanding}
@@ -219,8 +220,8 @@ export default function AddEntryScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={commonStyles.subtitle}>Mood / Well-being</Text>
-          <Text style={[commonStyles.textSecondary, { marginBottom: 12 }]}>Mood: {mood} / 10</Text>
+          <Text style={commonStyles.subtitle}>{getTranslation('addEntry.mood', currentLanguage)}</Text>
+          <Text style={[commonStyles.textSecondary, { marginBottom: 12 }]}>{getTranslation('addEntry.mood', currentLanguage)}: {mood} / 10</Text>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
               <Pressable
@@ -246,10 +247,10 @@ export default function AddEntryScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={commonStyles.subtitle}>Notes</Text>
+          <Text style={commonStyles.subtitle}>{getTranslation('addEntry.notes', currentLanguage)}</Text>
           <TextInput
             style={[commonStyles.input, styles.notesInput]}
-            placeholder="Any additional notes"
+            placeholder={getTranslation('addEntry.additionalNotes', currentLanguage)}
             placeholderTextColor={colors.textSecondary}
             value={notes}
             onChangeText={setNotes}
@@ -264,13 +265,13 @@ export default function AddEntryScreen() {
           style={[styles.button, styles.cancelButton]}
           onPress={() => router.back()}
         >
-          <Text style={[styles.buttonText, { color: colors.primary }]}>Cancel</Text>
+          <Text style={[styles.buttonText, { color: colors.primary }]}>{getTranslation('addEntry.cancel', currentLanguage)}</Text>
         </Pressable>
         <Pressable
           style={[styles.button, styles.saveButton]}
           onPress={handleSave}
         >
-          <Text style={[styles.buttonText, { color: '#fff' }]}>Save Entry</Text>
+          <Text style={[styles.buttonText, { color: '#fff' }]}>{getTranslation('addEntry.save', currentLanguage)}</Text>
         </Pressable>
       </View>
     </View>

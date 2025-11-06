@@ -2,7 +2,7 @@
 import { StyleSheet, Text, View, Pressable, ScrollView, Switch, Platform, Modal, TextInput } from 'react-native';
 import { router } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
-import { colors, commonStyles } from '@/styles/commonStyles';
+import { colors, commonStyles, getTranslation, Language } from '@/styles/commonStyles';
 import { useWidget } from '@/contexts/WidgetContext';
 import { useState, useEffect } from 'react';
 import { Reminder } from '@/contexts/WidgetContext';
@@ -94,7 +94,8 @@ const styles = StyleSheet.create({
 
 export default function RemindersScreen() {
   const theme = useTheme();
-  const { reminders, updateReminders } = useWidget();
+  const { reminders, updateReminders, userProfile } = useWidget();
+  const currentLanguage: Language = userProfile?.language || 'en';
   const [localReminders, setLocalReminders] = useState<Reminder[]>(reminders);
   const [editingReminderId, setEditingReminderId] = useState<string | null>(null);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -167,15 +168,15 @@ export default function RemindersScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={commonStyles.title}>Reminders</Text>
+        <Text style={commonStyles.title}>{getTranslation('reminders.title', currentLanguage)}</Text>
         <Text style={commonStyles.textSecondary}>
-          Set reminders for your measurements and medications
+          {getTranslation('reminders.description', currentLanguage)}
         </Text>
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <IconSymbol name="heart.fill" color={colors.primary} size={20} />
-            <Text style={styles.sectionTitle}>Pulse Measurements</Text>
+            <Text style={styles.sectionTitle}>{getTranslation('reminders.pulse', currentLanguage)}</Text>
           </View>
           {pulseReminders.map(reminder => (
             <View key={reminder.id} style={styles.reminderCard}>
@@ -207,14 +208,14 @@ export default function RemindersScreen() {
             onPress={() => handleAddReminder('pulse')}
           >
             <IconSymbol name="plus" color={colors.primary} size={20} />
-            <Text style={[styles.addButtonText, { color: colors.primary }]}>Add Pulse Reminder</Text>
+            <Text style={[styles.addButtonText, { color: colors.primary }]}>{getTranslation('reminders.addPulse', currentLanguage)}</Text>
           </Pressable>
         </View>
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <IconSymbol name="pills.fill" color={colors.secondary} size={20} />
-            <Text style={styles.sectionTitle}>Medication</Text>
+            <Text style={styles.sectionTitle}>{getTranslation('reminders.medicationReminder', currentLanguage)}</Text>
           </View>
           {medReminders.map(reminder => (
             <View key={reminder.id} style={styles.reminderCard}>
@@ -246,14 +247,14 @@ export default function RemindersScreen() {
             onPress={() => handleAddReminder('medication')}
           >
             <IconSymbol name="plus" color={colors.secondary} size={20} />
-            <Text style={[styles.addButtonText, { color: colors.secondary }]}>Add Medication Reminder</Text>
+            <Text style={[styles.addButtonText, { color: colors.secondary }]}>{getTranslation('reminders.addMedication', currentLanguage)}</Text>
           </Pressable>
         </View>
 
         <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>ℹ️ Note</Text>
+          <Text style={styles.infoTitle}>ℹ️ {getTranslation('reminders.note', currentLanguage)}</Text>
           <Text style={commonStyles.textSecondary}>
-            Reminders are stored locally on your device. Enable notifications in your device settings to receive alerts.
+            {getTranslation('reminders.noteText', currentLanguage)}
           </Text>
         </View>
       </ScrollView>

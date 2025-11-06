@@ -4,13 +4,14 @@ import { Stack, Link, Redirect } from "expo-router";
 import { ScrollView, Pressable, StyleSheet, View, Text, Platform } from "react-native";
 import { IconSymbol } from "@/components/IconSymbol";
 import { useTheme } from "@react-navigation/native";
-import { colors, commonStyles } from "@/styles/commonStyles";
+import { colors, commonStyles, getTranslation, Language } from "@/styles/commonStyles";
 import { useWidget } from "@/contexts/WidgetContext";
 import { DailyOverview, DrinkTracker } from "@/components/BodyScrollView";
 
 export default function HomeScreen() {
   const theme = useTheme();
   const { userProfile, isLoading } = useWidget();
+  const currentLanguage: Language = userProfile?.language || 'en';
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
@@ -33,43 +34,43 @@ export default function HomeScreen() {
 
   const menuItems = [
     {
-      title: "📅 Calendar",
-      description: "View your health records by date",
+      title: "📅 " + getTranslation('home.calendar', currentLanguage),
+      description: getTranslation('home.calendarDesc', currentLanguage),
       route: "/calendar",
       icon: "calendar",
       color: colors.primary,
     },
     {
-      title: "📝 Add Entry",
-      description: "Record pulse, blood pressure & medication",
+      title: "📝 " + getTranslation('home.addEntry', currentLanguage),
+      description: getTranslation('home.addEntryDesc', currentLanguage),
       route: "/add-entry",
       icon: "plus.circle.fill",
       color: colors.secondary,
     },
     {
-      title: "⌚ Samsung Health",
-      description: "Sync data from your Galaxy Watch 7",
+      title: "⌚ " + getTranslation('home.samsungHealth', currentLanguage),
+      description: getTranslation('home.samsungHealthDesc', currentLanguage),
       route: "/samsung-health",
       icon: "heart.circle.fill",
       color: colors.error,
     },
     {
-      title: "ℹ️ Health Info",
-      description: "Learn about POTS and circulatory disorders",
+      title: "ℹ️ " + getTranslation('home.healthInfo', currentLanguage),
+      description: getTranslation('home.healthInfoDesc', currentLanguage),
       route: "/health-info",
       icon: "info.circle.fill",
       color: colors.accent,
     },
     {
-      title: "🔔 Reminders",
-      description: "Set reminders for measurements & medication",
+      title: "🔔 " + getTranslation('home.reminders', currentLanguage),
+      description: getTranslation('home.remindersDesc', currentLanguage),
       route: "/formsheet",
       icon: "bell.fill",
       color: colors.primary,
     },
     {
-      title: "💬 Forum",
-      description: "Connect with community members",
+      title: "💬 " + getTranslation('home.forum', currentLanguage),
+      description: getTranslation('home.forumDesc', currentLanguage),
       route: "/modal",
       icon: "bubble.right.fill",
       color: colors.secondary,
@@ -92,9 +93,9 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={commonStyles.title}>Welcome, {userProfile.name || 'User'}!</Text>
+          <Text style={commonStyles.title}>{getTranslation('home.welcome', currentLanguage)}, {userProfile.name || 'User'}!</Text>
           <Text style={commonStyles.textSecondary}>
-            Track your health metrics and stay informed
+            {getTranslation('home.trackHealth', currentLanguage)}
           </Text>
         </View>
 
@@ -127,7 +128,7 @@ export default function HomeScreen() {
 
         <View style={styles.footer}>
           <Text style={commonStyles.textSecondary}>
-            Last updated: {new Date().toLocaleDateString()}
+            {getTranslation('home.lastUpdated', currentLanguage)}: {new Date().toLocaleDateString()}
           </Text>
         </View>
       </ScrollView>

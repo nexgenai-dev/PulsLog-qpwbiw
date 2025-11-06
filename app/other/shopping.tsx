@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, ScrollView, Platform, Pressable, Alert, TextInp
 import { SafeAreaView } from "react-native-safe-area-context";
 import { IconSymbol } from "@/components/IconSymbol";
 import { useTheme } from "@react-navigation/native";
-import { colors, commonStyles } from "@/styles/commonStyles";
+import { colors, commonStyles, getTranslation, Language } from "@/styles/commonStyles";
 import { useWidget } from "@/contexts/WidgetContext";
 import { router } from "expo-router";
 import { ShoppingList, ShoppingItem } from "@/contexts/WidgetContext";
@@ -13,7 +13,8 @@ const CATEGORIES = ['Fruits', 'Vegetables', 'Dairy', 'Meat', 'Drinks', 'Bakery',
 
 export default function ShoppingScreen() {
   const theme = useTheme();
-  const { shoppingLists, addShoppingList, updateShoppingList, deleteShoppingList } = useWidget();
+  const { shoppingLists, addShoppingList, updateShoppingList, deleteShoppingList, userProfile } = useWidget();
+  const currentLanguage: Language = userProfile?.language || 'en';
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
@@ -27,7 +28,7 @@ export default function ShoppingScreen() {
 
   const handleCreateList = async () => {
     if (!newListName.trim()) {
-      Alert.alert('Error', 'Please enter a list name');
+      Alert.alert('Error', getTranslation('shopping.errorList', currentLanguage));
       return;
     }
 
@@ -45,12 +46,12 @@ export default function ShoppingScreen() {
 
   const handleDeleteList = (id: string) => {
     Alert.alert(
-      'Delete List',
-      'Are you sure you want to delete this list?',
+      getTranslation('shopping.deleteList', currentLanguage),
+      getTranslation('shopping.deleteListConfirm', currentLanguage),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: getTranslation('profile.cancel', currentLanguage), style: 'cancel' },
         {
-          text: 'Delete',
+          text: getTranslation('shopping.deleteList', currentLanguage),
           onPress: async () => {
             await deleteShoppingList(id);
             if (selectedListId === id) {
@@ -65,7 +66,7 @@ export default function ShoppingScreen() {
 
   const handleAddItem = async () => {
     if (!newItemName.trim() || !selectedList) {
-      Alert.alert('Error', 'Please enter an item name');
+      Alert.alert('Error', getTranslation('shopping.error', currentLanguage));
       return;
     }
 
@@ -107,12 +108,12 @@ export default function ShoppingScreen() {
     if (!selectedList) return;
 
     Alert.alert(
-      'Delete Item',
-      'Are you sure you want to delete this item?',
+      getTranslation('shopping.deleteItem', currentLanguage),
+      getTranslation('shopping.deleteItemConfirm', currentLanguage),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: getTranslation('profile.cancel', currentLanguage), style: 'cancel' },
         {
-          text: 'Delete',
+          text: getTranslation('shopping.deleteItem', currentLanguage),
           onPress: async () => {
             const updatedItems = selectedList.items.filter(i => i.id !== itemId);
             await updateShoppingList({
@@ -139,7 +140,7 @@ export default function ShoppingScreen() {
         <Pressable onPress={() => router.back()}>
           <IconSymbol name="chevron.left" size={24} color={colors.text} />
         </Pressable>
-        <Text style={commonStyles.subtitle}>Shopping Lists</Text>
+        <Text style={commonStyles.subtitle}>{getTranslation('shopping.title', currentLanguage)}</Text>
         <Pressable onPress={() => setIsCreateModalVisible(true)}>
           <IconSymbol name="plus" size={24} color={colors.primary} />
         </Pressable>
@@ -157,8 +158,8 @@ export default function ShoppingScreen() {
           {shoppingLists.length === 0 ? (
             <View style={styles.emptyState}>
               <IconSymbol name="cart" size={64} color={colors.lightGray} />
-              <Text style={commonStyles.subtitle}>No Shopping Lists Yet</Text>
-              <Text style={commonStyles.textSecondary}>Create your first list to get started</Text>
+              <Text style={commonStyles.subtitle}>{getTranslation('shopping.noLists', currentLanguage)}</Text>
+              <Text style={commonStyles.textSecondary}>{getTranslation('shopping.createFirst', currentLanguage)}</Text>
             </View>
           ) : (
             <View style={styles.listContainer}>
@@ -178,7 +179,7 @@ export default function ShoppingScreen() {
                       <View>
                         <Text style={commonStyles.subtitle}>{list.name}</Text>
                         <Text style={commonStyles.textSecondary}>
-                          {checkedCount}/{list.items.length} items
+                          {checkedCount}/{list.items.length} {getTranslation('shopping.items', currentLanguage)}
                         </Text>
                       </View>
                       <Pressable
@@ -216,8 +217,8 @@ export default function ShoppingScreen() {
           {sortedItems.length === 0 ? (
             <View style={styles.emptyState}>
               <IconSymbol name="cart" size={64} color={colors.lightGray} />
-              <Text style={commonStyles.subtitle}>No Items Yet</Text>
-              <Text style={commonStyles.textSecondary}>Add an item to get started</Text>
+              <Text style={commonStyles.subtitle}>{getTranslation('shopping.noItems', currentLanguage)}</Text>
+              <Text style={commonStyles.textSecondary}>{getTranslation('shopping.addItem', currentLanguage)}</Text>
             </View>
           ) : (
             <View style={styles.itemsContainer}>
@@ -246,7 +247,7 @@ export default function ShoppingScreen() {
                       <View style={styles.itemMeta}>
                         {item.quantity && (
                           <Text style={commonStyles.textSecondary}>
-                            Qty: {item.quantity}
+                            {getTranslation('shopping.qty', currentLanguage)}: {item.quantity}
                           </Text>
                         )}
                         <Text style={commonStyles.textSecondary}>
@@ -279,7 +280,7 @@ export default function ShoppingScreen() {
             <Pressable onPress={() => setIsCreateModalVisible(false)}>
               <IconSymbol name="xmark" size={24} color={colors.text} />
             </Pressable>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>New List</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{getTranslation('shopping.newList', currentLanguage)}</Text>
             <View style={{ width: 24 }} />
           </View>
 
@@ -289,10 +290,10 @@ export default function ShoppingScreen() {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.editSection}>
-              <Text style={[styles.editLabel, { color: colors.text }]}>List Name</Text>
+              <Text style={[styles.editLabel, { color: colors.text }]}>{getTranslation('shopping.listName', currentLanguage)}</Text>
               <TextInput
                 style={[commonStyles.input, { color: colors.text }]}
-                placeholder="Enter list name"
+                placeholder={getTranslation('shopping.enterListName', currentLanguage)}
                 placeholderTextColor={colors.textSecondary}
                 value={newListName}
                 onChangeText={setNewListName}
@@ -305,13 +306,13 @@ export default function ShoppingScreen() {
               style={[styles.modalButton, { backgroundColor: colors.lightGray }]}
               onPress={() => setIsCreateModalVisible(false)}
             >
-              <Text style={[styles.modalButtonText, { color: colors.text }]}>Cancel</Text>
+              <Text style={[styles.modalButtonText, { color: colors.text }]}>{getTranslation('profile.cancel', currentLanguage)}</Text>
             </Pressable>
             <Pressable
               style={[styles.modalButton, { backgroundColor: colors.primary }]}
               onPress={handleCreateList}
             >
-              <Text style={[styles.modalButtonText, { color: '#fff' }]}>Create</Text>
+              <Text style={[styles.modalButtonText, { color: '#fff' }]}>{getTranslation('shopping.create', currentLanguage)}</Text>
             </Pressable>
           </View>
         </SafeAreaView>
@@ -328,7 +329,7 @@ export default function ShoppingScreen() {
             <Pressable onPress={() => setIsItemModalVisible(false)}>
               <IconSymbol name="xmark" size={24} color={colors.text} />
             </Pressable>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>New Item</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{getTranslation('shopping.newItem', currentLanguage)}</Text>
             <View style={{ width: 24 }} />
           </View>
 
@@ -338,10 +339,10 @@ export default function ShoppingScreen() {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.editSection}>
-              <Text style={[styles.editLabel, { color: colors.text }]}>Item Name</Text>
+              <Text style={[styles.editLabel, { color: colors.text }]}>{getTranslation('shopping.itemName', currentLanguage)}</Text>
               <TextInput
                 style={[commonStyles.input, { color: colors.text }]}
-                placeholder="Enter item name"
+                placeholder={getTranslation('shopping.enterItemName', currentLanguage)}
                 placeholderTextColor={colors.textSecondary}
                 value={newItemName}
                 onChangeText={setNewItemName}
@@ -349,10 +350,10 @@ export default function ShoppingScreen() {
             </View>
 
             <View style={styles.editSection}>
-              <Text style={[styles.editLabel, { color: colors.text }]}>Quantity (Optional)</Text>
+              <Text style={[styles.editLabel, { color: colors.text }]}>{getTranslation('shopping.quantity', currentLanguage)}</Text>
               <TextInput
                 style={[commonStyles.input, { color: colors.text }]}
-                placeholder="e.g., 2 kg, 1 dozen"
+                placeholder={getTranslation('shopping.quantityPlaceholder', currentLanguage)}
                 placeholderTextColor={colors.textSecondary}
                 value={newItemQuantity}
                 onChangeText={setNewItemQuantity}
@@ -360,7 +361,7 @@ export default function ShoppingScreen() {
             </View>
 
             <View style={styles.editSection}>
-              <Text style={[styles.editLabel, { color: colors.text }]}>Category</Text>
+              <Text style={[styles.editLabel, { color: colors.text }]}>{getTranslation('shopping.category', currentLanguage)}</Text>
               <Pressable
                 style={[commonStyles.input, { justifyContent: 'center' }]}
                 onPress={() => setShowCategoryPicker(!showCategoryPicker)}
@@ -401,13 +402,13 @@ export default function ShoppingScreen() {
               style={[styles.modalButton, { backgroundColor: colors.lightGray }]}
               onPress={() => setIsItemModalVisible(false)}
             >
-              <Text style={[styles.modalButtonText, { color: colors.text }]}>Cancel</Text>
+              <Text style={[styles.modalButtonText, { color: colors.text }]}>{getTranslation('profile.cancel', currentLanguage)}</Text>
             </Pressable>
             <Pressable
               style={[styles.modalButton, { backgroundColor: colors.primary }]}
               onPress={handleAddItem}
             >
-              <Text style={[styles.modalButtonText, { color: '#fff' }]}>Add Item</Text>
+              <Text style={[styles.modalButtonText, { color: '#fff' }]}>{getTranslation('shopping.addItem', currentLanguage)}</Text>
             </Pressable>
           </View>
         </SafeAreaView>

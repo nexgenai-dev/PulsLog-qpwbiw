@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, Pressable, ScrollView, TextInput, Platform, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useTheme } from '@react-navigation/native';
-import { colors, commonStyles } from '@/styles/commonStyles';
+import { colors, commonStyles, getTranslation, Language } from '@/styles/commonStyles';
 import { useWidget } from '@/contexts/WidgetContext';
 import { useState } from 'react';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -113,12 +113,13 @@ const styles = StyleSheet.create({
 export default function ForumScreen() {
   const theme = useTheme();
   const { forumMessages, addForumMessage, userProfile } = useWidget();
+  const currentLanguage: Language = userProfile?.language || 'en';
   const [messageText, setMessageText] = useState('');
   const [messages, setMessages] = useState<ForumMessage[]>(forumMessages);
 
   const handlePostMessage = async () => {
     if (!messageText.trim()) {
-      Alert.alert('Error', 'Please enter a message');
+      Alert.alert('Error', getTranslation('forum.error', currentLanguage));
       return;
     }
 
@@ -133,7 +134,7 @@ export default function ForumScreen() {
     await addForumMessage(newMessage);
     setMessages([newMessage, ...messages]);
     setMessageText('');
-    Alert.alert('Success', 'Message posted!');
+    Alert.alert('Success', getTranslation('forum.success', currentLanguage));
   };
 
   const handleLikeMessage = (id: string) => {
@@ -153,13 +154,13 @@ export default function ForumScreen() {
           <Pressable onPress={() => router.back()} style={styles.backButton}>
             <IconSymbol name="arrow.left" color={colors.primary} size={24} />
           </Pressable>
-          <Text style={commonStyles.title}>Community Forum</Text>
+          <Text style={commonStyles.title}>{getTranslation('forum.title', currentLanguage)}</Text>
         </View>
 
         <View style={styles.messageInputContainer}>
           <TextInput
             style={styles.messageInput}
-            placeholder="Share your thoughts or ask a question..."
+            placeholder={getTranslation('forum.placeholder', currentLanguage)}
             placeholderTextColor={colors.textSecondary}
             value={messageText}
             onChangeText={setMessageText}
@@ -171,15 +172,15 @@ export default function ForumScreen() {
             onPress={handlePostMessage}
           >
             <IconSymbol name="paperplane.fill" color="#FFFFFF" size={18} />
-            <Text style={styles.postButtonText}>Post</Text>
+            <Text style={styles.postButtonText}>{getTranslation('forum.post', currentLanguage)}</Text>
           </Pressable>
         </View>
 
         <View style={styles.messagesContainer}>
-          <Text style={[commonStyles.subtitle, { marginBottom: 12 }]}>Recent Messages</Text>
+          <Text style={[commonStyles.subtitle, { marginBottom: 12 }]}>{getTranslation('forum.recentMessages', currentLanguage)}</Text>
           {messages.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={commonStyles.textSecondary}>No messages yet. Be the first to post!</Text>
+              <Text style={commonStyles.textSecondary}>{getTranslation('forum.noMessages', currentLanguage)}</Text>
             </View>
           ) : (
             messages.map(message => (

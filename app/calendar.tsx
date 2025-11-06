@@ -2,23 +2,24 @@
 import React, { useState } from 'react';
 import { ScrollView, View, Text, Pressable, StyleSheet, Platform, Alert } from 'react-native';
 import { useTheme } from '@react-navigation/native';
-import { colors, commonStyles } from '@/styles/commonStyles';
+import { colors, commonStyles, getTranslation, Language } from '@/styles/commonStyles';
 import { useWidget } from '@/contexts/WidgetContext';
 import { IconSymbol } from '@/components/IconSymbol';
 
 export default function CalendarScreen() {
   const theme = useTheme();
-  const { healthEntries, getEntriesByDate, deleteHealthEntry } = useWidget();
+  const { healthEntries, getEntriesByDate, deleteHealthEntry, userProfile } = useWidget();
+  const currentLanguage: Language = userProfile?.language || 'en';
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const handleDeleteEntry = (entryId: string) => {
     Alert.alert(
-      'Delete Entry',
-      'Are you sure you want to delete this entry?',
+      getTranslation('calendar.deleteEntry', currentLanguage),
+      getTranslation('calendar.deleteConfirm', currentLanguage),
       [
-        { text: 'Cancel', onPress: () => console.log('Delete cancelled') },
+        { text: getTranslation('profile.cancel', currentLanguage), onPress: () => console.log('Delete cancelled') },
         {
-          text: 'Delete',
+          text: getTranslation('calendar.deleteEntry', currentLanguage),
           onPress: async () => {
             await deleteHealthEntry(entryId);
             Alert.alert('Success', 'Entry deleted successfully');
@@ -72,7 +73,7 @@ export default function CalendarScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={commonStyles.title}>Calendar</Text>
+        <Text style={commonStyles.title}>{getTranslation('calendar.title', currentLanguage)}</Text>
 
         <View style={styles.monthHeader}>
           <Pressable onPress={handlePrevMonth} style={styles.monthButton}>
@@ -145,17 +146,17 @@ export default function CalendarScreen() {
                 </View>
                 {entry.pulseResting && (
                   <Text style={commonStyles.textSecondary}>
-                    Pulse: {entry.pulseResting} bpm
+                    {getTranslation('calendar.pulse', currentLanguage)}: {entry.pulseResting} bpm
                   </Text>
                 )}
                 {entry.systolicResting && (
                   <Text style={commonStyles.textSecondary}>
-                    BP: {entry.systolicResting}/{entry.diastolicResting} mmHg
+                    {getTranslation('calendar.bp', currentLanguage)}: {entry.systolicResting}/{entry.diastolicResting} mmHg
                   </Text>
                 )}
                 {entry.medication && (
                   <Text style={commonStyles.textSecondary}>
-                    Medication: {entry.medication} {entry.medicationAmount}
+                    {getTranslation('calendar.medication', currentLanguage)}: {entry.medication} {entry.medicationAmount}
                   </Text>
                 )}
               </View>
@@ -166,7 +167,7 @@ export default function CalendarScreen() {
         {selectedEntries.length === 0 && (
           <View style={styles.noEntriesContainer}>
             <Text style={commonStyles.textSecondary}>
-              No entries for {dateString}
+              {getTranslation('calendar.noEntries', currentLanguage)} {dateString}
             </Text>
           </View>
         )}

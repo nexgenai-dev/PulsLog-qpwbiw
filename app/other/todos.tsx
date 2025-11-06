@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, ScrollView, Platform, Pressable, Alert, TextInp
 import { SafeAreaView } from "react-native-safe-area-context";
 import { IconSymbol } from "@/components/IconSymbol";
 import { useTheme } from "@react-navigation/native";
-import { colors, commonStyles } from "@/styles/commonStyles";
+import { colors, commonStyles, getTranslation, Language } from "@/styles/commonStyles";
 import { useWidget } from "@/contexts/WidgetContext";
 import { router } from "expo-router";
 import { TodoList, TodoTask } from "@/contexts/WidgetContext";
@@ -12,7 +12,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function TodosScreen() {
   const theme = useTheme();
-  const { todoLists, addTodoList, updateTodoList, deleteTodoList } = useWidget();
+  const { todoLists, addTodoList, updateTodoList, deleteTodoList, userProfile } = useWidget();
+  const currentLanguage: Language = userProfile?.language || 'en';
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
@@ -27,7 +28,7 @@ export default function TodosScreen() {
 
   const handleCreateList = async () => {
     if (!newListName.trim()) {
-      Alert.alert('Error', 'Please enter a list name');
+      Alert.alert('Error', getTranslation('todos.errorList', currentLanguage));
       return;
     }
 
@@ -45,12 +46,12 @@ export default function TodosScreen() {
 
   const handleDeleteList = (id: string) => {
     Alert.alert(
-      'Delete List',
-      'Are you sure you want to delete this list?',
+      getTranslation('todos.deleteList', currentLanguage),
+      getTranslation('todos.deleteListConfirm', currentLanguage),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: getTranslation('profile.cancel', currentLanguage), style: 'cancel' },
         {
-          text: 'Delete',
+          text: getTranslation('todos.deleteList', currentLanguage),
           onPress: async () => {
             await deleteTodoList(id);
             if (selectedListId === id) {
@@ -65,7 +66,7 @@ export default function TodosScreen() {
 
   const handleAddTask = async () => {
     if (!newTaskTitle.trim() || !selectedList) {
-      Alert.alert('Error', 'Please enter a task title');
+      Alert.alert('Error', getTranslation('todos.error', currentLanguage));
       return;
     }
 
@@ -107,12 +108,12 @@ export default function TodosScreen() {
     if (!selectedList) return;
 
     Alert.alert(
-      'Delete Task',
-      'Are you sure you want to delete this task?',
+      getTranslation('todos.deleteTask', currentLanguage),
+      getTranslation('todos.deleteTaskConfirm', currentLanguage),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: getTranslation('profile.cancel', currentLanguage), style: 'cancel' },
         {
-          text: 'Delete',
+          text: getTranslation('todos.deleteTask', currentLanguage),
           onPress: async () => {
             const updatedTasks = selectedList.tasks.filter(t => t.id !== taskId);
             await updateTodoList({
@@ -154,7 +155,7 @@ export default function TodosScreen() {
         <Pressable onPress={() => router.back()}>
           <IconSymbol name="chevron.left" size={24} color={colors.text} />
         </Pressable>
-        <Text style={commonStyles.subtitle}>To-Do Lists</Text>
+        <Text style={commonStyles.subtitle}>{getTranslation('todos.title', currentLanguage)}</Text>
         <Pressable onPress={() => setIsCreateModalVisible(true)}>
           <IconSymbol name="plus" size={24} color={colors.primary} />
         </Pressable>
@@ -172,8 +173,8 @@ export default function TodosScreen() {
           {todoLists.length === 0 ? (
             <View style={styles.emptyState}>
               <IconSymbol name="checkmark.circle" size={64} color={colors.lightGray} />
-              <Text style={commonStyles.subtitle}>No To-Do Lists Yet</Text>
-              <Text style={commonStyles.textSecondary}>Create your first list to get started</Text>
+              <Text style={commonStyles.subtitle}>{getTranslation('todos.noLists', currentLanguage)}</Text>
+              <Text style={commonStyles.textSecondary}>{getTranslation('todos.createFirst', currentLanguage)}</Text>
             </View>
           ) : (
             <View style={styles.listContainer}>
@@ -191,7 +192,7 @@ export default function TodosScreen() {
                     <View>
                       <Text style={commonStyles.subtitle}>{list.name}</Text>
                       <Text style={commonStyles.textSecondary}>
-                        {list.tasks.length} task{list.tasks.length !== 1 ? 's' : ''}
+                        {list.tasks.length} {list.tasks.length !== 1 ? getTranslation('todos.tasks', currentLanguage) : getTranslation('todos.task', currentLanguage)}
                       </Text>
                     </View>
                     <Pressable
@@ -228,8 +229,8 @@ export default function TodosScreen() {
           {sortedTasks.length === 0 ? (
             <View style={styles.emptyState}>
               <IconSymbol name="checkmark.circle" size={64} color={colors.lightGray} />
-              <Text style={commonStyles.subtitle}>No Tasks Yet</Text>
-              <Text style={commonStyles.textSecondary}>Add a task to get started</Text>
+              <Text style={commonStyles.subtitle}>{getTranslation('todos.noTasks', currentLanguage)}</Text>
+              <Text style={commonStyles.textSecondary}>{getTranslation('todos.addTask', currentLanguage)}</Text>
             </View>
           ) : (
             <View style={styles.tasksContainer}>
@@ -288,7 +289,7 @@ export default function TodosScreen() {
             <Pressable onPress={() => setIsCreateModalVisible(false)}>
               <IconSymbol name="xmark" size={24} color={colors.text} />
             </Pressable>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>New List</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{getTranslation('todos.newList', currentLanguage)}</Text>
             <View style={{ width: 24 }} />
           </View>
 
@@ -298,10 +299,10 @@ export default function TodosScreen() {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.editSection}>
-              <Text style={[styles.editLabel, { color: colors.text }]}>List Name</Text>
+              <Text style={[styles.editLabel, { color: colors.text }]}>{getTranslation('todos.listName', currentLanguage)}</Text>
               <TextInput
                 style={[commonStyles.input, { color: colors.text }]}
-                placeholder="Enter list name"
+                placeholder={getTranslation('todos.enterListName', currentLanguage)}
                 placeholderTextColor={colors.textSecondary}
                 value={newListName}
                 onChangeText={setNewListName}
@@ -314,13 +315,13 @@ export default function TodosScreen() {
               style={[styles.modalButton, { backgroundColor: colors.lightGray }]}
               onPress={() => setIsCreateModalVisible(false)}
             >
-              <Text style={[styles.modalButtonText, { color: colors.text }]}>Cancel</Text>
+              <Text style={[styles.modalButtonText, { color: colors.text }]}>{getTranslation('profile.cancel', currentLanguage)}</Text>
             </Pressable>
             <Pressable
               style={[styles.modalButton, { backgroundColor: colors.primary }]}
               onPress={handleCreateList}
             >
-              <Text style={[styles.modalButtonText, { color: '#fff' }]}>Create</Text>
+              <Text style={[styles.modalButtonText, { color: '#fff' }]}>{getTranslation('todos.create', currentLanguage)}</Text>
             </Pressable>
           </View>
         </SafeAreaView>
@@ -337,7 +338,7 @@ export default function TodosScreen() {
             <Pressable onPress={() => setIsTaskModalVisible(false)}>
               <IconSymbol name="xmark" size={24} color={colors.text} />
             </Pressable>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>New Task</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{getTranslation('todos.newTask', currentLanguage)}</Text>
             <View style={{ width: 24 }} />
           </View>
 
@@ -347,10 +348,10 @@ export default function TodosScreen() {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.editSection}>
-              <Text style={[styles.editLabel, { color: colors.text }]}>Task Title</Text>
+              <Text style={[styles.editLabel, { color: colors.text }]}>{getTranslation('todos.taskTitle', currentLanguage)}</Text>
               <TextInput
                 style={[commonStyles.input, { color: colors.text }]}
-                placeholder="Enter task title"
+                placeholder={getTranslation('todos.enterTaskTitle', currentLanguage)}
                 placeholderTextColor={colors.textSecondary}
                 value={newTaskTitle}
                 onChangeText={setNewTaskTitle}
@@ -358,13 +359,13 @@ export default function TodosScreen() {
             </View>
 
             <View style={styles.editSection}>
-              <Text style={[styles.editLabel, { color: colors.text }]}>Due Date (Optional)</Text>
+              <Text style={[styles.editLabel, { color: colors.text }]}>{getTranslation('todos.dueDate', currentLanguage)}</Text>
               <Pressable
                 style={[commonStyles.input, { justifyContent: 'center' }]}
                 onPress={() => setShowDatePicker(true)}
               >
                 <Text style={{ color: newTaskDueDate ? colors.text : colors.textSecondary }}>
-                  {newTaskDueDate ? newTaskDueDate.toLocaleDateString() : 'Select date'}
+                  {newTaskDueDate ? newTaskDueDate.toLocaleDateString() : getTranslation('todos.selectDate', currentLanguage)}
                 </Text>
               </Pressable>
               {showDatePicker && (
@@ -378,13 +379,13 @@ export default function TodosScreen() {
             </View>
 
             <View style={styles.editSection}>
-              <Text style={[styles.editLabel, { color: colors.text }]}>Due Time (Optional)</Text>
+              <Text style={[styles.editLabel, { color: colors.text }]}>{getTranslation('todos.dueTime', currentLanguage)}</Text>
               <Pressable
                 style={[commonStyles.input, { justifyContent: 'center' }]}
                 onPress={() => setShowTimePicker(true)}
               >
                 <Text style={{ color: newTaskDueTime ? colors.text : colors.textSecondary }}>
-                  {newTaskDueTime ? newTaskDueTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Select time'}
+                  {newTaskDueTime ? newTaskDueTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : getTranslation('todos.selectTime', currentLanguage)}
                 </Text>
               </Pressable>
               {showTimePicker && (
@@ -403,13 +404,13 @@ export default function TodosScreen() {
               style={[styles.modalButton, { backgroundColor: colors.lightGray }]}
               onPress={() => setIsTaskModalVisible(false)}
             >
-              <Text style={[styles.modalButtonText, { color: colors.text }]}>Cancel</Text>
+              <Text style={[styles.modalButtonText, { color: colors.text }]}>{getTranslation('profile.cancel', currentLanguage)}</Text>
             </Pressable>
             <Pressable
               style={[styles.modalButton, { backgroundColor: colors.primary }]}
               onPress={handleAddTask}
             >
-              <Text style={[styles.modalButtonText, { color: '#fff' }]}>Add Task</Text>
+              <Text style={[styles.modalButtonText, { color: '#fff' }]}>{getTranslation('todos.addTaskBtn', currentLanguage)}</Text>
             </Pressable>
           </View>
         </SafeAreaView>

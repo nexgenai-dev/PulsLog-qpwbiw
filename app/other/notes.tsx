@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, ScrollView, Platform, Pressable, Alert, TextInp
 import { SafeAreaView } from "react-native-safe-area-context";
 import { IconSymbol } from "@/components/IconSymbol";
 import { useTheme } from "@react-navigation/native";
-import { colors, commonStyles } from "@/styles/commonStyles";
+import { colors, commonStyles, getTranslation, Language } from "@/styles/commonStyles";
 import { useWidget } from "@/contexts/WidgetContext";
 import { router } from "expo-router";
 import { Note } from "@/contexts/WidgetContext";
@@ -12,7 +12,8 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function NotesScreen() {
   const theme = useTheme();
-  const { notes, addNote, updateNote, deleteNote } = useWidget();
+  const { notes, addNote, updateNote, deleteNote, userProfile } = useWidget();
+  const currentLanguage: Language = userProfile?.language || 'en';
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [isEditingNote, setIsEditingNote] = useState<Note | null>(null);
   const [editTitle, setEditTitle] = useState('');
@@ -24,7 +25,7 @@ export default function NotesScreen() {
 
   const handleCreateNote = async () => {
     if (!editTitle.trim() || !editContent.trim()) {
-      Alert.alert('Error', 'Please enter a title and content');
+      Alert.alert('Error', getTranslation('notes.error', currentLanguage));
       return;
     }
 
@@ -44,7 +45,7 @@ export default function NotesScreen() {
 
   const handleUpdateNote = async () => {
     if (!editTitle.trim() || !editContent.trim() || !isEditingNote) {
-      Alert.alert('Error', 'Please enter a title and content');
+      Alert.alert('Error', getTranslation('notes.error', currentLanguage));
       return;
     }
 
@@ -63,12 +64,12 @@ export default function NotesScreen() {
 
   const handleDeleteNote = (id: string) => {
     Alert.alert(
-      'Delete Note',
-      'Are you sure you want to delete this note?',
+      getTranslation('notes.deleteNote', currentLanguage),
+      getTranslation('notes.deleteConfirm', currentLanguage),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: getTranslation('profile.cancel', currentLanguage), style: 'cancel' },
         {
-          text: 'Delete',
+          text: getTranslation('notes.deleteNote', currentLanguage),
           onPress: async () => {
             await deleteNote(id);
           },
@@ -119,7 +120,7 @@ export default function NotesScreen() {
         <Pressable onPress={() => router.back()}>
           <IconSymbol name="chevron.left" size={24} color={colors.text} />
         </Pressable>
-        <Text style={commonStyles.subtitle}>Notes</Text>
+        <Text style={commonStyles.subtitle}>{getTranslation('notes.title', currentLanguage)}</Text>
         <Pressable
           onPress={() => {
             resetForm();
@@ -141,8 +142,8 @@ export default function NotesScreen() {
         {sortedNotes.length === 0 ? (
           <View style={styles.emptyState}>
             <IconSymbol name="note.text" size={64} color={colors.lightGray} />
-            <Text style={commonStyles.subtitle}>No Notes Yet</Text>
-            <Text style={commonStyles.textSecondary}>Create your first note to get started</Text>
+            <Text style={commonStyles.subtitle}>{getTranslation('notes.noNotes', currentLanguage)}</Text>
+            <Text style={commonStyles.textSecondary}>{getTranslation('notes.createFirst', currentLanguage)}</Text>
           </View>
         ) : (
           <View style={styles.notesContainer}>
@@ -215,7 +216,7 @@ export default function NotesScreen() {
               <IconSymbol name="xmark" size={24} color={colors.text} />
             </Pressable>
             <Text style={[styles.modalTitle, { color: colors.text }]}>
-              {isEditingNote ? 'Edit Note' : 'New Note'}
+              {isEditingNote ? getTranslation('notes.editNote', currentLanguage) : getTranslation('notes.newNote', currentLanguage)}
             </Text>
             <View style={{ width: 24 }} />
           </View>
@@ -226,10 +227,10 @@ export default function NotesScreen() {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.editSection}>
-              <Text style={[styles.editLabel, { color: colors.text }]}>Title</Text>
+              <Text style={[styles.editLabel, { color: colors.text }]}>{getTranslation('notes.noteTitle', currentLanguage)}</Text>
               <TextInput
                 style={[commonStyles.input, { color: colors.text }]}
-                placeholder="Enter note title"
+                placeholder={getTranslation('notes.enterTitle', currentLanguage)}
                 placeholderTextColor={colors.textSecondary}
                 value={editTitle}
                 onChangeText={setEditTitle}
@@ -237,14 +238,14 @@ export default function NotesScreen() {
             </View>
 
             <View style={styles.editSection}>
-              <Text style={[styles.editLabel, { color: colors.text }]}>Content</Text>
+              <Text style={[styles.editLabel, { color: colors.text }]}>{getTranslation('notes.content', currentLanguage)}</Text>
               <TextInput
                 style={[
                   commonStyles.input,
                   styles.contentInput,
                   { color: colors.text }
                 ]}
-                placeholder="Enter note content"
+                placeholder={getTranslation('notes.enterContent', currentLanguage)}
                 placeholderTextColor={colors.textSecondary}
                 value={editContent}
                 onChangeText={setEditContent}
@@ -255,13 +256,13 @@ export default function NotesScreen() {
             </View>
 
             <View style={styles.editSection}>
-              <Text style={[styles.editLabel, { color: colors.text }]}>Date (Optional)</Text>
+              <Text style={[styles.editLabel, { color: colors.text }]}>{getTranslation('notes.date', currentLanguage)}</Text>
               <Pressable
                 style={[commonStyles.input, { justifyContent: 'center' }]}
                 onPress={() => setShowDatePicker(true)}
               >
                 <Text style={{ color: editDate ? colors.text : colors.textSecondary }}>
-                  {editDate ? editDate.toLocaleDateString() : 'Select date'}
+                  {editDate ? editDate.toLocaleDateString() : getTranslation('notes.selectDate', currentLanguage)}
                 </Text>
               </Pressable>
               {showDatePicker && (
@@ -275,13 +276,13 @@ export default function NotesScreen() {
             </View>
 
             <View style={styles.editSection}>
-              <Text style={[styles.editLabel, { color: colors.text }]}>Time (Optional)</Text>
+              <Text style={[styles.editLabel, { color: colors.text }]}>{getTranslation('notes.time', currentLanguage)}</Text>
               <Pressable
                 style={[commonStyles.input, { justifyContent: 'center' }]}
                 onPress={() => setShowTimePicker(true)}
               >
                 <Text style={{ color: editTime ? colors.text : colors.textSecondary }}>
-                  {editTime ? editTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Select time'}
+                  {editTime ? editTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : getTranslation('notes.selectTime', currentLanguage)}
                 </Text>
               </Pressable>
               {showTimePicker && (
@@ -303,14 +304,14 @@ export default function NotesScreen() {
                 resetForm();
               }}
             >
-              <Text style={[styles.modalButtonText, { color: colors.text }]}>Cancel</Text>
+              <Text style={[styles.modalButtonText, { color: colors.text }]}>{getTranslation('profile.cancel', currentLanguage)}</Text>
             </Pressable>
             <Pressable
               style={[styles.modalButton, { backgroundColor: colors.primary }]}
               onPress={isEditingNote ? handleUpdateNote : handleCreateNote}
             >
               <Text style={[styles.modalButtonText, { color: '#fff' }]}>
-                {isEditingNote ? 'Update' : 'Create'}
+                {isEditingNote ? getTranslation('notes.update', currentLanguage) : getTranslation('notes.newNote', currentLanguage)}
               </Text>
             </Pressable>
           </View>

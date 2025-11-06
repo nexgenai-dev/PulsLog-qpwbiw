@@ -167,11 +167,9 @@ export default function FlowerSimulatorScreen() {
     Alert.alert('Success', `+${challenge.reward} coins!`);
   };
 
-  const handleUseGameItemPress = (itemId: string) => {
-    return async () => {
-      if (!currentFlower) return;
-      await useGameItem(itemId, currentFlower.id);
-    };
+  const handleUseGameItemPress = async (itemId: string) => {
+    if (!currentFlower) return;
+    await useGameItem(itemId, currentFlower.id);
   };
 
   return (

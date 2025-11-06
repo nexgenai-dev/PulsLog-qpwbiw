@@ -174,6 +174,7 @@ export interface Flower {
   level: number;
   xp: number;
   lastWateredDate: string;
+  lastWateredTime?: string;
   wateredToday: boolean;
   rescuesUsed: number;
   createdAt: string;
@@ -260,6 +261,8 @@ interface WidgetContextType {
   waterFlower: (flowerId: string) => Promise<void>;
   addGameCoins: (amount: number) => Promise<void>;
   useGameItem: (itemId: string, flowerId: string) => Promise<void>;
+  canWaterFlower: (flowerId: string) => boolean;
+  getTimeUntilNextWater: (flowerId: string) => string;
   isLoading: boolean;
   refreshWidget: () => void;
 }
@@ -389,6 +392,7 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
               level: 1,
               xp: 0,
               lastWateredDate: new Date().toISOString().split('T')[0],
+              lastWateredTime: new Date().toISOString(),
               wateredToday: false,
               rescuesUsed: 0,
               createdAt: new Date().toISOString(),
@@ -714,12 +718,40 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const canWaterFlower = (flowerId: string): boolean => {
+    if (!gameState) return false;
+    const flower = gameState.flowers.find(f => f.id === flowerId);
+    if (!flower) return false;
+
+    const today = new Date().toISOString().split('T')[0];
+    return flower.lastWateredDate !== today;
+  };
+
+  const getTimeUntilNextWater = (flowerId: string): string => {
+    if (!gameState) return '';
+    const flower = gameState.flowers.find(f => f.id === flowerId);
+    if (!flower) return '';
+
+    const today = new Date().toISOString().split('T')[0];
+    if (flower.lastWateredDate !== today) {
+      return 'Available now';
+    }
+
+    const now = new Date();
+    const nextMidnight = new Date();
+    nextMidnight.setDate(nextMidnight.getDate() + 1);
+    nextMidnight.setHours(0, 0, 0, 0);
+
+    const hoursLeft = Math.ceil((nextMidnight.getTime() - now.getTime()) / (1000 * 60 * 60));
+    return `${hoursLeft}h until next water`;
+  };
+
   const waterFlower = async (flowerId: string) => {
     if (!gameState) return;
 
+    const today = new Date().toISOString().split('T')[0];
     const updatedFlowers = gameState.flowers.map(flower => {
-      if (flower.id === flowerId) {
-        const today = new Date().toISOString().split('T')[0];
+      if (flower.id === flowerId && flower.lastWateredDate !== today) {
         const xpGain = 10;
         const newXp = flower.xp + xpGain;
         const xpPerLevel = 50;
@@ -730,6 +762,7 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
           xp: newXp,
           level: newLevel,
           lastWateredDate: today,
+          lastWateredTime: new Date().toISOString(),
           wateredToday: true,
         };
       }
@@ -861,6 +894,8 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
       waterFlower,
       addGameCoins,
       useGameItem,
+      canWaterFlower,
+      getTimeUntilNextWater,
       isLoading,
       refreshWidget,
     }}>

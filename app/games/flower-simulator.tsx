@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Platform, Pressable, Alert, Modal, TextInput } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, Platform, Pressable, Alert, Modal, TextInput, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { IconSymbol } from "@/components/IconSymbol";
 import { useTheme } from "@react-navigation/native";
@@ -24,7 +24,7 @@ const SHOP_ITEMS = [
 
 export default function FlowerSimulatorScreen() {
   const theme = useTheme();
-  const { gameState, userProfile, waterFlower, addGameCoins, updateGameState } = useWidget();
+  const { gameState, userProfile, waterFlower, addGameCoins, updateGameState, canWaterFlower, getTimeUntilNextWater } = useWidget();
   const currentLanguage: Language = userProfile?.language || 'en';
   const [activeTab, setActiveTab] = useState<'home' | 'collection' | 'shop' | 'challenges'>('home');
   const [selectedFlower, setSelectedFlower] = useState<string | null>(null);
@@ -32,6 +32,38 @@ export default function FlowerSimulatorScreen() {
   const [levelUpFlowerId, setLevelUpFlowerId] = useState<string | null>(null);
   const [showNewFlowerModal, setShowNewFlowerModal] = useState(false);
   const [newFlowerName, setNewFlowerName] = useState('');
+  
+  // Animation values
+  const [scaleAnim] = useState(new Animated.Value(1));
+  const [rotateAnim] = useState(new Animated.Value(0));
+  const [bounceAnim] = useState(new Animated.Value(0));
+
+  useEffect(() => {
+    // Gentle floating animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(bounceAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bounceAnim, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Gentle rotation animation
+    Animated.loop(
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 8000,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
 
   const currentFlower = selectedFlower && gameState ? gameState.flowers.find(f => f.id === selectedFlower) : gameState?.flowers[0];
 
@@ -96,6 +128,25 @@ export default function FlowerSimulatorScreen() {
 
   const handleWaterFlower = async () => {
     if (!currentFlower) return;
+
+    if (!canWaterFlower(currentFlower.id)) {
+      Alert.alert('Already Watered', getTimeUntilNextWater(currentFlower.id));
+      return;
+    }
+
+    // Trigger scale animation
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 1.2,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
     const oldLevel = getFlowerLevel(currentFlower.xp).level;
     await waterFlower(currentFlower.id);
@@ -178,6 +229,7 @@ export default function FlowerSimulatorScreen() {
       level: 1,
       xp: 0,
       lastWateredDate: new Date().toISOString().split('T')[0],
+      lastWateredTime: new Date().toISOString(),
       wateredToday: false,
       rescuesUsed: 0,
       createdAt: new Date().toISOString(),
@@ -204,6 +256,16 @@ export default function FlowerSimulatorScreen() {
     Alert.alert('Success', `+${challenge.reward} coins!`);
   };
 
+  const bounceInterpolate = bounceAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -15],
+  });
+
+  const rotateInterpolate = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '5deg'],
+  });
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
       <View style={styles.header}>
@@ -224,13 +286,22 @@ export default function FlowerSimulatorScreen() {
       >
         {activeTab === 'home' && currentFlower && (
           <View>
-            <View style={styles.flowerDisplay}>
+            <Animated.View style={[
+              styles.flowerDisplay,
+              {
+                transform: [
+                  { scale: scaleAnim },
+                  { translateY: bounceInterpolate },
+                  { rotate: rotateInterpolate },
+                ],
+              },
+            ]}>
               <Text style={styles.flowerEmoji}>{getFlowerLevel(currentFlower.xp).emoji}</Text>
               <Text style={[styles.flowerName, { color: colors.text }]}>{currentFlower.name}</Text>
               <Text style={[styles.flowerLevel, { color: colors.primary }]}>
                 {getTranslation('games.level', currentLanguage)} {getFlowerLevel(currentFlower.xp).level}
               </Text>
-            </View>
+            </Animated.View>
 
             <View style={styles.xpContainer}>
               <View style={styles.xpBar}>
@@ -265,12 +336,19 @@ export default function FlowerSimulatorScreen() {
             </View>
 
             <Pressable
-              style={[styles.waterButton, { backgroundColor: colors.primary }]}
+              style={[
+                styles.waterButton,
+                {
+                  backgroundColor: canWaterFlower(currentFlower.id) ? colors.primary : colors.lightGray,
+                  opacity: canWaterFlower(currentFlower.id) ? 1 : 0.6,
+                },
+              ]}
               onPress={handleWaterFlower}
+              disabled={!canWaterFlower(currentFlower.id)}
             >
-              <IconSymbol name="droplet.fill" size={24} color="#fff" />
-              <Text style={[styles.waterButtonText, { color: '#fff' }]}>
-                {getTranslation('games.water', currentLanguage)}
+              <IconSymbol name="droplet.fill" size={24} color={canWaterFlower(currentFlower.id) ? "#fff" : colors.textSecondary} />
+              <Text style={[styles.waterButtonText, { color: canWaterFlower(currentFlower.id) ? "#fff" : colors.textSecondary }]}>
+                {canWaterFlower(currentFlower.id) ? getTranslation('games.water', currentLanguage) : getTimeUntilNextWater(currentFlower.id)}
               </Text>
             </Pressable>
 
@@ -579,9 +657,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.lightGray,
+    boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
   },
   flowerEmoji: {
-    fontSize: 80,
+    fontSize: 100,
     marginBottom: 12,
   },
   flowerName: {
@@ -638,6 +717,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     marginBottom: 20,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
   },
   waterButtonText: {
     fontSize: 16,

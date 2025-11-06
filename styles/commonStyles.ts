@@ -325,6 +325,9 @@ export const translations: Record<Language, Record<string, string>> = {
     'games.xpReward': 'XP Boost',
     'games.itemReward': 'Item',
     'games.coinReward': 'Coins',
+    'games.alreadyWatered': 'Already watered today! Come back tomorrow.',
+    'games.nextWaterTime': 'Next watering available at 00:00',
+    'games.wateringCooldown': 'Watering cooldown active',
   },
   de: {
     // Onboarding
@@ -648,6 +651,9 @@ export const translations: Record<Language, Record<string, string>> = {
     'games.xpReward': 'XP-Boost',
     'games.itemReward': 'Artikel',
     'games.coinReward': 'Münzen',
+    'games.alreadyWatered': 'Heute bereits gegossen! Komm morgen zurück.',
+    'games.nextWaterTime': 'Nächste Bewässerung verfügbar um 00:00',
+    'games.wateringCooldown': 'Bewässerungsverzögerung aktiv',
   },
   es: {
     // Onboarding

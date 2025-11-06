@@ -25,19 +25,16 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 20,
-    // backgroundColor handled dynamically
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
-    // color handled dynamically
   },
   text: {
     fontSize: 16,
     marginBottom: 24,
     textAlign: 'center',
-    // color handled dynamically
   },
   button: {
     paddingHorizontal: 20,
@@ -47,6 +44,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: '600',
-    // color handled dynamically
   },
 });
+
+// Onboarding screen created in app/onboarding.tsx

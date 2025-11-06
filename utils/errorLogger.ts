@@ -1,6 +1,7 @@
 // Global error logging for runtime errors
 
 import { Platform } from "react-native";
+import { HealthEntry, UserProfile } from "@/contexts/WidgetContext";
 
 // Simple debouncing to prevent duplicate errors
 const recentErrors: { [key: string]: boolean } = {};
@@ -40,6 +41,62 @@ const sendErrorToParent = (level: string, message: string, data: any) => {
   } catch (error) {
     console.error('❌ Failed to send error to parent:', error);
   }
+};
+
+export const calculateAverageValues = (entries: HealthEntry[]) => {
+  if (entries.length === 0) {
+    return { avgPulse: 0, avgSystolic: 0, avgDiastolic: 0 };
+  }
+
+  let totalPulse = 0;
+  let totalSystolic = 0;
+  let totalDiastolic = 0;
+  let pulseCount = 0;
+  let systolicCount = 0;
+  let diastolicCount = 0;
+
+  entries.forEach(entry => {
+    if (entry.pulseResting) {
+      totalPulse += entry.pulseResting;
+      pulseCount++;
+    }
+    if (entry.systolicResting) {
+      totalSystolic += entry.systolicResting;
+      systolicCount++;
+    }
+    if (entry.diastolicResting) {
+      totalDiastolic += entry.diastolicResting;
+      diastolicCount++;
+    }
+  });
+
+  return {
+    avgPulse: pulseCount > 0 ? Math.round(totalPulse / pulseCount) : 0,
+    avgSystolic: systolicCount > 0 ? Math.round(totalSystolic / systolicCount) : 0,
+    avgDiastolic: diastolicCount > 0 ? Math.round(totalDiastolic / diastolicCount) : 0,
+  };
+};
+
+export const checkHealthWarnings = (entry: HealthEntry, profile: UserProfile) => {
+  const warnings: string[] = [];
+
+  if (entry.pulseResting && entry.pulseResting > profile.avgPulse * 1.3) {
+    warnings.push(`High pulse: ${entry.pulseResting} bpm (avg: ${profile.avgPulse} bpm)`);
+  }
+
+  if (entry.pulseResting && entry.pulseResting < profile.avgPulse * 0.7) {
+    warnings.push(`Low pulse: ${entry.pulseResting} bpm (avg: ${profile.avgPulse} bpm)`);
+  }
+
+  if (entry.systolicResting && entry.systolicResting > profile.avgSystolic * 1.2) {
+    warnings.push(`High systolic: ${entry.systolicResting} mmHg (avg: ${profile.avgSystolic} mmHg)`);
+  }
+
+  if (entry.systolicResting && entry.systolicResting < profile.avgSystolic * 0.8) {
+    warnings.push(`Low systolic: ${entry.systolicResting} mmHg (avg: ${profile.avgSystolic} mmHg)`);
+  }
+
+  return warnings;
 };
 
 // Function to extract meaningful source location from stack trace
@@ -204,4 +261,60 @@ export const setupErrorLogging = () => {
       }
     }
   }
+};
+
+export const calculateAverageValues = (entries: HealthEntry[]) => {
+  if (entries.length === 0) {
+    return { avgPulse: 0, avgSystolic: 0, avgDiastolic: 0 };
+  }
+
+  let totalPulse = 0;
+  let totalSystolic = 0;
+  let totalDiastolic = 0;
+  let pulseCount = 0;
+  let systolicCount = 0;
+  let diastolicCount = 0;
+
+  entries.forEach(entry => {
+    if (entry.pulseResting) {
+      totalPulse += entry.pulseResting;
+      pulseCount++;
+    }
+    if (entry.systolicResting) {
+      totalSystolic += entry.systolicResting;
+      systolicCount++;
+    }
+    if (entry.diastolicResting) {
+      totalDiastolic += entry.diastolicResting;
+      diastolicCount++;
+    }
+  });
+
+  return {
+    avgPulse: pulseCount > 0 ? Math.round(totalPulse / pulseCount) : 0,
+    avgSystolic: systolicCount > 0 ? Math.round(totalSystolic / systolicCount) : 0,
+    avgDiastolic: diastolicCount > 0 ? Math.round(totalDiastolic / diastolicCount) : 0,
+  };
+};
+
+export const checkHealthWarnings = (entry: HealthEntry, profile: UserProfile) => {
+  const warnings: string[] = [];
+
+  if (entry.pulseResting && entry.pulseResting > profile.avgPulse * 1.3) {
+    warnings.push(`High pulse: ${entry.pulseResting} bpm (avg: ${profile.avgPulse} bpm)`);
+  }
+
+  if (entry.pulseResting && entry.pulseResting < profile.avgPulse * 0.7) {
+    warnings.push(`Low pulse: ${entry.pulseResting} bpm (avg: ${profile.avgPulse} bpm)`);
+  }
+
+  if (entry.systolicResting && entry.systolicResting > profile.avgSystolic * 1.2) {
+    warnings.push(`High systolic: ${entry.systolicResting} mmHg (avg: ${profile.avgSystolic} mmHg)`);
+  }
+
+  if (entry.systolicResting && entry.systolicResting < profile.avgSystolic * 0.8) {
+    warnings.push(`Low systolic: ${entry.systolicResting} mmHg (avg: ${profile.avgSystolic} mmHg)`);
+  }
+
+  return warnings;
 };

@@ -36,11 +36,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 12,
-    // color handled dynamically
   },
   text: {
     fontSize: 16,
     textAlign: 'center',
-    // color handled dynamically
   },
 });

@@ -21,7 +21,7 @@ import { WidgetProvider } from "@/contexts/WidgetContext";
 SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
-  initialRouteName: "(tabs)",
+  initialRouteName: "onboarding",
 };
 
 export default function RootLayout() {
@@ -86,8 +86,34 @@ export default function RootLayout() {
           <WidgetProvider>
             <GestureHandlerRootView>
             <Stack>
+              {/* Onboarding */}
+              <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+
               {/* Main app with tabs */}
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+
+              {/* App screens */}
+              <Stack.Screen
+                name="calendar"
+                options={{
+                  title: "Calendar",
+                  presentation: "card",
+                }}
+              />
+              <Stack.Screen
+                name="add-entry"
+                options={{
+                  title: "Add Entry",
+                  presentation: "card",
+                }}
+              />
+              <Stack.Screen
+                name="health-info"
+                options={{
+                  title: "Health Information",
+                  presentation: "card",
+                }}
+              />
 
               {/* Modal Demo Screens */}
               <Stack.Screen

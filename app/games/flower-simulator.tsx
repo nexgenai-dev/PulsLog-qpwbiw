@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, ScrollView, Platform, Pressable, Alert, Modal, TextInput, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { IconSymbol } from "@/components/IconSymbol";
@@ -33,39 +33,43 @@ export default function FlowerSimulatorScreen() {
   const [showNewFlowerModal, setShowNewFlowerModal] = useState(false);
   const [newFlowerName, setNewFlowerName] = useState('');
   
-  // Animation values
-  const [scaleAnim] = useState(new Animated.Value(1));
-  const [rotateAnim] = useState(new Animated.Value(0));
-  const [bounceAnim] = useState(new Animated.Value(0));
-
-  useEffect(() => {
-    // Gentle floating animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(bounceAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(bounceAnim, {
-          toValue: 0,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-
-    // Gentle rotation animation
-    Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 8000,
-        useNativeDriver: true,
-      })
-    ).start();
-  }, []);
+  const flowerAnimations = useRef<{ [key: string]: { scale: Animated.Value; bounce: Animated.Value; rotate: Animated.Value } }>({});
 
   const currentFlower = selectedFlower && gameState ? gameState.flowers.find(f => f.id === selectedFlower) : gameState?.flowers[0];
+
+  const getFlowerAnimation = (flowerId: string) => {
+    if (!flowerAnimations.current[flowerId]) {
+      flowerAnimations.current[flowerId] = {
+        scale: new Animated.Value(1),
+        bounce: new Animated.Value(0),
+        rotate: new Animated.Value(0),
+      };
+
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(flowerAnimations.current[flowerId].bounce, {
+            toValue: 1,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(flowerAnimations.current[flowerId].bounce, {
+            toValue: 0,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+
+      Animated.loop(
+        Animated.timing(flowerAnimations.current[flowerId].rotate, {
+          toValue: 1,
+          duration: 8000,
+          useNativeDriver: true,
+        })
+      ).start();
+    }
+    return flowerAnimations.current[flowerId];
+  };
 
   const handleUseGameItemPress = async (itemId: string) => {
     if (!currentFlower) {
@@ -134,14 +138,14 @@ export default function FlowerSimulatorScreen() {
       return;
     }
 
-    // Trigger scale animation
+    const anim = getFlowerAnimation(currentFlower.id);
     Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 1.2,
+      Animated.timing(anim.scale, {
+        toValue: 1.3,
         duration: 300,
         useNativeDriver: true,
       }),
-      Animated.timing(scaleAnim, {
+      Animated.timing(anim.scale, {
         toValue: 1,
         duration: 300,
         useNativeDriver: true,
@@ -228,8 +232,8 @@ export default function FlowerSimulatorScreen() {
       name: newFlowerName,
       level: 1,
       xp: 0,
-      lastWateredDate: new Date().toISOString().split('T')[0],
-      lastWateredTime: new Date().toISOString(),
+      lastWateredDate: null,
+      lastWateredTime: null,
       wateredToday: false,
       rescuesUsed: 0,
       createdAt: new Date().toISOString(),
@@ -256,15 +260,35 @@ export default function FlowerSimulatorScreen() {
     Alert.alert('Success', `+${challenge.reward} coins!`);
   };
 
-  const bounceInterpolate = bounceAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, -15],
-  });
+  const renderFlowerWithAnimation = (flower: any) => {
+    const anim = getFlowerAnimation(flower.id);
+    const bounceInterpolate = anim.bounce.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, -15],
+    });
 
-  const rotateInterpolate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '5deg'],
-  });
+    const rotateInterpolate = anim.rotate.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', '5deg'],
+    });
+
+    return (
+      <Animated.Text
+        style={[
+          styles.flowerEmoji,
+          {
+            transform: [
+              { scale: anim.scale },
+              { translateY: bounceInterpolate },
+              { rotate: rotateInterpolate },
+            ],
+          },
+        ]}
+      >
+        {getFlowerLevel(flower.xp).emoji}
+      </Animated.Text>
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
@@ -286,22 +310,13 @@ export default function FlowerSimulatorScreen() {
       >
         {activeTab === 'home' && currentFlower && (
           <View>
-            <Animated.View style={[
-              styles.flowerDisplay,
-              {
-                transform: [
-                  { scale: scaleAnim },
-                  { translateY: bounceInterpolate },
-                  { rotate: rotateInterpolate },
-                ],
-              },
-            ]}>
-              <Text style={styles.flowerEmoji}>{getFlowerLevel(currentFlower.xp).emoji}</Text>
+            <View style={styles.flowerDisplay}>
+              {renderFlowerWithAnimation(currentFlower)}
               <Text style={[styles.flowerName, { color: colors.text }]}>{currentFlower.name}</Text>
               <Text style={[styles.flowerLevel, { color: colors.primary }]}>
                 {getTranslation('games.level', currentLanguage)} {getFlowerLevel(currentFlower.xp).level}
               </Text>
-            </Animated.View>
+            </View>
 
             <View style={styles.xpContainer}>
               <View style={styles.xpBar}>
@@ -395,31 +410,57 @@ export default function FlowerSimulatorScreen() {
               </Text>
             </Pressable>
 
-            {gameState.flowers.map(flower => (
-              <Pressable
-                key={flower.id}
-                style={[
-                  commonStyles.card,
-                  styles.collectionItem,
-                  selectedFlower === flower.id && styles.collectionItemActive,
-                ]}
-                onPress={() => {
-                  setSelectedFlower(flower.id);
-                  setActiveTab('home');
-                }}
-              >
-                <View style={styles.collectionItemContent}>
-                  <Text style={styles.collectionItemEmoji}>{getFlowerLevel(flower.xp).emoji}</Text>
-                  <View style={styles.collectionItemInfo}>
-                    <Text style={commonStyles.text}>{flower.name}</Text>
-                    <Text style={commonStyles.textSecondary}>
-                      {getTranslation('games.level', currentLanguage)} {getFlowerLevel(flower.xp).level}
-                    </Text>
+            {gameState.flowers.map(flower => {
+              const anim = getFlowerAnimation(flower.id);
+              const bounceInterpolate = anim.bounce.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, -8],
+              });
+
+              const rotateInterpolate = anim.rotate.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['0deg', '3deg'],
+              });
+
+              return (
+                <Pressable
+                  key={flower.id}
+                  style={[
+                    commonStyles.card,
+                    styles.collectionItem,
+                    selectedFlower === flower.id && styles.collectionItemActive,
+                  ]}
+                  onPress={() => {
+                    setSelectedFlower(flower.id);
+                    setActiveTab('home');
+                  }}
+                >
+                  <View style={styles.collectionItemContent}>
+                    <Animated.Text
+                      style={[
+                        styles.collectionItemEmoji,
+                        {
+                          transform: [
+                            { scale: anim.scale },
+                            { translateY: bounceInterpolate },
+                            { rotate: rotateInterpolate },
+                          ],
+                        },
+                      ]}
+                    >
+                      {getFlowerLevel(flower.xp).emoji}
+                    </Animated.Text>
+                    <View style={styles.collectionItemInfo}>
+                      <Text style={commonStyles.text}>{flower.name}</Text>
+                      <Text style={commonStyles.textSecondary}>
+                        {getTranslation('games.level', currentLanguage)} {getFlowerLevel(flower.xp).level}
+                      </Text>
+                    </View>
+                    <IconSymbol name="chevron.right" size={20} color={colors.textSecondary} />
                   </View>
-                  <IconSymbol name="chevron.right" size={20} color={colors.textSecondary} />
-                </View>
-              </Pressable>
-            ))}
+                </Pressable>
+              );
+            })}
           </View>
         )}
 

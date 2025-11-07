@@ -173,8 +173,8 @@ export interface Flower {
   name: string;
   level: number;
   xp: number;
-  lastWateredDate: string;
-  lastWateredTime?: string;
+  lastWateredDate: string | null;
+  lastWateredTime?: string | null;
   wateredToday: boolean;
   rescuesUsed: number;
   createdAt: string;
@@ -391,8 +391,8 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
               name: 'Blüte',
               level: 1,
               xp: 0,
-              lastWateredDate: new Date().toISOString().split('T')[0],
-              lastWateredTime: new Date().toISOString(),
+              lastWateredDate: null,
+              lastWateredTime: null,
               wateredToday: false,
               rescuesUsed: 0,
               createdAt: new Date().toISOString(),
@@ -723,6 +723,8 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
     const flower = gameState.flowers.find(f => f.id === flowerId);
     if (!flower) return false;
 
+    if (!flower.lastWateredDate) return true;
+
     const today = new Date().toISOString().split('T')[0];
     return flower.lastWateredDate !== today;
   };
@@ -731,6 +733,10 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
     if (!gameState) return '';
     const flower = gameState.flowers.find(f => f.id === flowerId);
     if (!flower) return '';
+
+    if (!flower.lastWateredDate) {
+      return 'Available now';
+    }
 
     const today = new Date().toISOString().split('T')[0];
     if (flower.lastWateredDate !== today) {
@@ -751,7 +757,7 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
 
     const today = new Date().toISOString().split('T')[0];
     const updatedFlowers = gameState.flowers.map(flower => {
-      if (flower.id === flowerId && flower.lastWateredDate !== today) {
+      if (flower.id === flowerId && (!flower.lastWateredDate || flower.lastWateredDate !== today)) {
         const xpGain = 10;
         const newXp = flower.xp + xpGain;
         const xpPerLevel = 50;
